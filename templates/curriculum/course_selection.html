@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}Select a Course{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto; padding: 20px;">
+    <h2>Welcome, {{ user.username }}!</h2>
+    <p>Please select a course to begin your learning journey. Note: You can only select one course.</p>
+    
+    <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 20px;">
+        {% for course in courses %}
+        <div style="border: 1px solid #ddd; border-radius: 8px; padding: 20px; width: 300px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h3>{{ course.name }}</h3>
+            <p>{{ course.description }}</p>
+            <form action="{% url 'enroll' course.id %}" method="post">
+                {% csrf_token %}
+                <button type="submit" style="background-color: #28a745; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer;">
+                    Enroll in {{ course.name }}
+                </button>
+            </form>
+        </div>
+        {% empty %}
+        <p>No courses are currently available. Please check back later.</p>
+        {% endfor %}
+    </div>
+
+    <div style="margin-top: 30px;">
+        <form action="{% url 'logout' %}" method="post">
+            {% csrf_token %}
+            <button type="submit" style="background-color: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">Logout</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

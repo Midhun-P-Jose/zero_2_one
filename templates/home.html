@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<h2>Welcome to Django Authentication</h2>
+{% if user.is_authenticated %}
+    <p>Hello, {{ user.username }}! You are successfully logged in.</p>
+    <form action="{% url 'logout' %}" method="post" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" style="background-color: #dc3545;">Logout</button>
+    </form>
+{% else %}
+    <p>You are currently not logged in.</p>
+    <div class="links">
+        <a href="{% url 'login' %}">Login</a> | 
+        <a href="{% url 'signup' %}">Sign Up</a>
+    </div>
+{% endif %}
+{% endblock %}

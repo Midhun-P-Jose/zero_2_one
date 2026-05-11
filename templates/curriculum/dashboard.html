@@ -1,0 +1,33 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}Dashboard - {{ course.name }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; padding: 20px;">
+    <div style="border-bottom: 2px solid #ddd; padding-bottom: 10px; margin-bottom: 20px;">
+        <h2>{{ course.name }} - Study Plan</h2>
+    </div>
+
+    {% if course.description %}
+    <div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+        <strong>Course Description:</strong> {{ course.description }}
+    </div>
+    {% endif %}
+
+    <h3>Week by Week Plan</h3>
+    {% if weeks %}
+        <div style="display: flex; flex-direction: column; gap: 15px;">
+            {% for week in weeks %}
+            <div style="border-left: 4px solid #007bff; background: #f8f9fa; padding: 15px; border-radius: 4px;">
+                <h4 style="margin-top: 0; color: #0056b3;">Week {{ week.week_number }}: {{ week.title }}</h4>
+                {% if week.description %}
+                <p style="margin-bottom: 0;">{{ week.description }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>No study plan has been added for this course yet.</p>
+    {% endif %}
+</div>
+{% endblock %}
