@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from .forms import UserSignupForm, UserLoginForm
 from django.contrib.auth import login, logout
 from django.views.decorators.cache import never_cache
 
@@ -17,13 +17,13 @@ def signup_view(request):
         return redirect('home')
         
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = UserSignupForm(request.POST)
         if form.is_valid():
             user = form.save()
-            login(request, user)
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             return redirect('login') # or redirect to dashboard
     else:
-        form = UserCreationForm()
+        form = UserSignupForm()
     return render(request, 'accounts/signup.html', {'form': form})
 
 @never_cache
@@ -32,13 +32,13 @@ def login_view(request):
         return redirect('home')
         
     if request.method == 'POST':
-        form = AuthenticationForm(request, data=request.POST)
+        form = UserLoginForm(request, data=request.POST)
         if form.is_valid():
             user = form.get_user()
             login(request, user)
             return redirect('home')
     else:
-        form = AuthenticationForm(request)
+        form = UserLoginForm(request)
     return render(request, 'accounts/login.html', {'form': form})
 
 @never_cache
