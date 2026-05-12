@@ -10,7 +10,8 @@
 
     {% if course.description %}
     <div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
-        <strong>Course Description:</strong> {{ course.description }}
+        <strong>Course Description:</strong><br>
+        {{ course.description|linebreaksbr }}
     </div>
     {% endif %}
 
@@ -18,12 +19,21 @@
     {% if weeks %}
         <div style="display: flex; flex-direction: column; gap: 15px;">
             {% for week in weeks %}
-            <div style="border-left: 4px solid #007bff; background: #f8f9fa; padding: 15px; border-radius: 4px;">
-                <h4 style="margin-top: 0; color: #0056b3;">Week {{ week.week_number }}: {{ week.title }}</h4>
-                {% if week.description %}
-                <p style="margin-bottom: 0;">{{ week.description }}</p>
+                {% if week.week_number <= enrollment.current_week_unlocked %}
+                    <div style="border-left: 4px solid #007bff; background: #f8f9fa; padding: 15px; border-radius: 4px;">
+                        <h4 style="margin-top: 0; color: #0056b3;">Week {{ week.week_number }}: {{ week.title }}</h4>
+                        {% if week.description %}
+                        <p style="margin-bottom: 0;">{{ week.description|linebreaksbr }}</p>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div style="border-left: 4px solid #6c757d; background: #e9ecef; padding: 15px; border-radius: 4px; opacity: 0.7;">
+                        <h4 style="margin-top: 0; color: #495057;">
+                            🔒 Week {{ week.week_number }}: Locked
+                        </h4>
+                        <p style="margin-bottom: 0; font-style: italic; color: #6c757d;">This week is currently locked. Pass previous weeks to unlock.</p>
+                    </div>
                 {% endif %}
-            </div>
             {% endfor %}
         </div>
     {% else %}

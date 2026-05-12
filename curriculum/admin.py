@@ -17,5 +17,6 @@ class CourseWeekAdmin(admin.ModelAdmin):
 
 @admin.register(Enrollment)
 class EnrollmentAdmin(admin.ModelAdmin):
-    list_display = ('user', 'course', 'enrolled_at')
+    list_display = ('user', 'course', 'current_week_unlocked', 'enrolled_at')
+    list_editable = ('current_week_unlocked',)
     list_filter = ('course', 'enrolled_at')

@@ -34,5 +34,6 @@ def dashboard(request):
     weeks = course.weeks.all()
     return render(request, 'curriculum/dashboard.html', {
         'course': course,
-        'weeks': weeks
+        'weeks': weeks,
+        'enrollment': enrollment
     })

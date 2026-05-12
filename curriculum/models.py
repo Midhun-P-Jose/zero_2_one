@@ -25,6 +25,7 @@ class Enrollment(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='enrollment')
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     enrolled_at = models.DateTimeField(auto_now_add=True)
+    current_week_unlocked = models.PositiveIntegerField(default=1)
 
     def __str__(self):
         return f"{self.user.username} enrolled in {self.course.name}"
