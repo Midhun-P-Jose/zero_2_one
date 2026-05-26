@@ -5,7 +5,7 @@
 {% block content %}
 <h2>Welcome to Django Authentication</h2>
 {% if user.is_authenticated %}
-    <p>Hello, {{ user.username }}! You are successfully logged in.</p>
+    <p>Hello, {{ user }}! You are successfully logged in.</p>
     <form action="{% url 'logout' %}" method="post" style="display:inline;">
         {% csrf_token %}
         <button type="submit" style="background-color: #dc3545;">Logout</button>

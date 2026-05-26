@@ -41,10 +41,10 @@ def login_view(request):
         form = UserLoginForm(request)
     return render(request, 'accounts/login.html', {'form': form})
 
+from django.views.decorators.csrf import csrf_exempt
+
 @never_cache
+@csrf_exempt
 def logout_view(request):
-    if request.method == 'POST':
-        logout(request)
-        return redirect('login')
     logout(request)
     return redirect('login')

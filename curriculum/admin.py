@@ -1,5 +1,14 @@
 from django.contrib import admin
-from .models import Course, CourseWeek, Enrollment
+from .models import Course, CourseWeek, Enrollment, Interview_questions
+
+@admin.register(Interview_questions)
+class InterviewQuestionsAdmin(admin.ModelAdmin):
+    list_display = ('user', 'get_email')
+    search_fields = ('user__first_name', 'user__email')
+
+    def get_email(self, obj):
+        return obj.user.email
+    get_email.short_description = 'Email'
 
 class CourseWeekInline(admin.TabularInline):
     model = CourseWeek
@@ -17,6 +26,11 @@ class CourseWeekAdmin(admin.ModelAdmin):
 
 @admin.register(Enrollment)
 class EnrollmentAdmin(admin.ModelAdmin):
-    list_display = ('user', 'course', 'current_week_unlocked', 'enrolled_at')
+    list_display = ('user', 'get_email', 'course', 'current_week_unlocked', 'enrolled_at')
     list_editable = ('current_week_unlocked',)
     list_filter = ('course', 'enrolled_at')
+    search_fields = ('user__first_name', 'user__email')
+
+    def get_email(self, obj):
+        return obj.user.email
+    get_email.short_description = 'Email'

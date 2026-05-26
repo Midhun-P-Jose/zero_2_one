@@ -1,0 +1,196 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}Weekly Tasks - {{ course.name }}{% endblock %}
+
+{% block content %}
+<div class="weekly-tasks-container" style="max-width: 1200px; margin: 0 auto; padding: 10px;">
+    <!-- Page Header -->
+    <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 15px;">
+        <div>
+            <h2 style="margin: 0; color: #0f172a; font-size: 24px; font-weight: 700;">Weekly Learning Plan</h2>
+            <p style="margin: 5px 0 0; color: #64748b; font-size: 14.5px;">Click any week below to view its full details and start the assessment.</p>
+        </div>
+        <div style="background: white; border: 1px solid #e2e8f0; padding: 8px 16px; border-radius: 8px; font-size: 13.5px; color: #334155; font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+            Current Week: <span style="color: #4f46e5; font-weight: 700;">Week {{ enrollment.current_week_unlocked }}</span>
+        </div>
+    </div>
+
+    <!-- Horizontal Weeks Selector Track -->
+    {% if weeks %}
+        <div style="display: flex; gap: 20px; overflow-x: auto; padding: 10px 0 20px; scrollbar-width: thin; -webkit-overflow-scrolling: touch; margin-bottom: 30px;">
+            {% for week in weeks %}
+                {% if week.week_number <= enrollment.current_week_unlocked %}
+                    <!-- Unlocked Card (Clickable Selector) -->
+                    <div class="week-selector-card" id="selector-week-{{ week.id }}"
+                         data-id="{{ week.id }}"
+                         data-number="{{ week.week_number }}"
+                         data-title="{{ week.title }}"
+                         data-desc="{% if week.description %}{{ week.description }}{% else %}No description provided.{% endif %}"
+                         data-status="{% if week.week_number < enrollment.current_week_unlocked %}passed{% else %}active{% endif %}"
+                         data-url="{% url 'interview' week.id %}"
+                         style="min-width: 250px; max-width: 250px; background: white; border-radius: 12px; border: 2px solid {% if week.week_number == enrollment.current_week_unlocked %}#4f46e5{% else %}#e2e8f0{% endif %}; padding: 20px; cursor: pointer; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: all 0.2s;"
+                         onclick="selectWeek(this)">
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 11px; font-weight: 700; color: #4f46e5; text-transform: uppercase; letter-spacing: 0.5px;">Week {{ week.week_number }}</span>
+                            {% if week.week_number < enrollment.current_week_unlocked %}
+                                <span style="background: #dcfce7; color: #15803d; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 20px;">✓ Passed</span>
+                            {% else %}
+                                <span style="background: #e0f2fe; color: #0369a1; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 20px;">⚡ Active</span>
+                            {% endif %}
+                        </div>
+                        <h4 style="margin: 0; color: #1e293b; font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ week.title }}</h4>
+                    </div>
+                {% else %}
+                    <!-- Locked Card (Disabled) -->
+                    <div class="week-selector-card locked" id="selector-week-{{ week.id }}"
+                         data-id="{{ week.id }}"
+                         data-number="{{ week.week_number }}"
+                         data-title="{{ week.title }}"
+                         data-desc="Complete current week objectives to unlock this technical module."
+                         data-status="locked"
+                         data-url="#"
+                         style="min-width: 250px; max-width: 250px; background: #f8fafc; border-radius: 12px; border: 2px dashed #cbd5e1; padding: 20px; cursor: pointer; display: flex; flex-direction: column; gap: 10px; opacity: 0.65; transition: all 0.2s;"
+                         onclick="selectWeek(this)">
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Week {{ week.week_number }}</span>
+                            <span style="background: #e2e8f0; color: #64748b; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 20px;">🔒 Locked</span>
+                        </div>
+                        <h4 style="margin: 0; color: #94a3b8; font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Locked Module</h4>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <!-- Detailed Week Task Panel -->
+        <div id="details-panel" style="background: white; border-radius: 16px; border: 1px solid #e2e8f0; padding: 35px; box-shadow: 0 10px 20px -5px rgba(0,0,0,0.04); display: flex; flex-direction: column; justify-content: space-between; min-height: 250px;">
+            <div>
+                <!-- Badge row -->
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                    <span id="detail-badge-number" style="background: #4f46e5; color: white; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px;">Week 1</span>
+                    <span id="detail-badge-status" style="background: #e0f2fe; color: #0369a1; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 20px;">⚡ Active assessment</span>
+                </div>
+                
+                <h3 id="detail-title" style="margin: 0 0 20px; color: #0f172a; font-size: 22px; font-weight: 700;">Loading...</h3>
+                
+                <!-- Separator line -->
+                <div style="height: 1px; background: #e2e8f0; margin-bottom: 20px;"></div>
+                
+                <h4 style="margin: 0 0 10px; color: #475569; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Module Objectives & Tasks:</h4>
+                <p id="detail-desc" style="margin: 0 0 35px; color: #334155; font-size: 15px; line-height: 1.7; white-space: pre-line; max-width: 900px;"></p>
+            </div>
+
+            <!-- Start Interview / Action Button at the end -->
+            <div style="border-top: 1px solid #e2e8f0; padding-top: 25px; display: flex; justify-content: flex-end;">
+                <a id="detail-action-btn" href="#" 
+                   style="display: inline-block; text-align: center; text-decoration: none; padding: 14px 35px; border-radius: 8px; font-weight: 700; font-size: 15px; transition: all 0.2s;">
+                   Start Interview
+                </a>
+            </div>
+        </div>
+    {% else %}
+        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 14px; padding: 40px; text-align: center; color: #64748b;">
+            <p style="margin: 0; font-size: 15px;">No study plan has been added for this course yet.</p>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+    function selectWeek(card) {
+        // 1. Remove active styles from all cards
+        document.querySelectorAll('.week-selector-card').forEach(c => {
+            c.style.transform = 'translateY(0)';
+            c.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.05)';
+            if (!c.classList.contains('locked')) {
+                c.style.borderColor = '#e2e8f0';
+            }
+        });
+
+        // 2. Add active styling to selected card
+        card.style.transform = 'translateY(-4px)';
+        card.style.boxShadow = '0 8px 15px -3px rgba(79, 70, 229, 0.15)';
+        if (!card.classList.contains('locked')) {
+            card.style.borderColor = '#4f46e5';
+        }
+
+        // 3. Extract data attributes
+        const id = card.getAttribute('data-id');
+        const number = card.getAttribute('data-number');
+        const title = card.getAttribute('data-title');
+        const desc = card.getAttribute('data-desc');
+        const status = card.getAttribute('data-status');
+        const url = card.getAttribute('data-url');
+
+        // 4. Update Details Panel content
+        document.getElementById('detail-title').innerText = title;
+        document.getElementById('detail-desc').innerText = desc;
+        
+        // Update Week Badge
+        const numBadge = document.getElementById('detail-badge-number');
+        numBadge.innerText = `Week ${number}`;
+        
+        // Update Status Badge and Action Button
+        const statusBadge = document.getElementById('detail-badge-status');
+        const actionBtn = document.getElementById('detail-action-btn');
+
+        if (status === 'passed') {
+            statusBadge.innerText = '✓ Passed Module';
+            statusBadge.style.background = '#dcfce7';
+            statusBadge.style.color = '#15803d';
+            
+            actionBtn.style.display = 'inline-block';
+            actionBtn.href = url;
+            actionBtn.innerText = 'Review Assessment';
+            actionBtn.style.background = '#f1f5f9';
+            actionBtn.style.color = '#4f46e5';
+            actionBtn.style.border = '1px solid #e2e8f0';
+            actionBtn.style.cursor = 'pointer';
+        } else if (status === 'active') {
+            statusBadge.innerText = '⚡ Active Assessment';
+            statusBadge.style.background = '#e0f2fe';
+            statusBadge.style.color = '#0369a1';
+            
+            actionBtn.style.display = 'inline-block';
+            actionBtn.href = url;
+            actionBtn.innerText = 'Start Interview';
+            actionBtn.style.background = '#4f46e5';
+            actionBtn.style.color = 'white';
+            actionBtn.style.border = '1px solid transparent';
+            actionBtn.style.cursor = 'pointer';
+        } else {
+            statusBadge.innerText = '🔒 Locked Module';
+            statusBadge.style.background = '#f1f5f9';
+            statusBadge.style.color = '#64748b';
+            
+            actionBtn.style.display = 'none'; // Hide button for locked modules
+        }
+    }
+
+    // Auto-select the active week card on page load
+    window.addEventListener('DOMContentLoaded', () => {
+        // Find the active week selector card (the one with data-status="active")
+        const activeCard = document.querySelector('.week-selector-card[data-status="active"]');
+        if (activeCard) {
+            selectWeek(activeCard);
+            // Scroll it into view
+            activeCard.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        } else {
+            // Fallback: select the first card
+            const firstCard = document.querySelector('.week-selector-card');
+            if (firstCard) selectWeek(firstCard);
+        }
+    });
+</script>
+
+<style>
+    .week-selector-card:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 12px -2px rgba(0,0,0,0.08) !important;
+    }
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+</style>
+{% endblock %}

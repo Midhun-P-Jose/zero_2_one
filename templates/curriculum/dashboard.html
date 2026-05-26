@@ -3,41 +3,118 @@
 {% block title %}Dashboard - {{ course.name }}{% endblock %}
 
 {% block content %}
-<div style="max-width: 800px; padding: 20px;">
-    <div style="border-bottom: 2px solid #ddd; padding-bottom: 10px; margin-bottom: 20px;">
-        <h2>{{ course.name }} - Study Plan</h2>
+<div class="dashboard-container" style="max-width: 1200px; margin: 0 auto; padding: 10px;">
+    <!-- Welcome Header Card -->
+    <div style="background: linear-gradient(135deg, #4f46e5 0%, #312e81 100%); padding: 35px; border-radius: 16px; color: white; margin-bottom: 30px; box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.3);">
+        <span style="background: rgba(255, 255, 255, 0.2); padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">My Learning Dashboard</span>
+        <h2 style="margin: 15px 0 10px; font-size: 28px; font-weight: 700;">{{ course.name }}</h2>
+        <p style="margin: 0; opacity: 0.85; font-size: 15px; line-height: 1.6; max-width: 700px;">
+            Track your progress, view your active course syllabus, and take mock technical interviews to level up.
+        </p>
     </div>
 
-    {% if course.description %}
-    <div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
-        <strong>Course Description:</strong><br>
-        {{ course.description|linebreaksbr }}
-    </div>
-    {% endif %}
+    <!-- Stats Section -->
+    <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 35px;">
+        <!-- Card 1: Current Week -->
+        <div style="flex: 1; min-width: 250px; background: white; border: 1px solid #e2e8f0; border-radius: 14px; padding: 24px; display: flex; align-items: center; gap: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+            <div style="width: 54px; height: 54px; background: #e0e7ff; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+            </div>
+            <div>
+                <p style="margin: 0; color: #64748b; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Current Status</p>
+                <h3 style="margin: 4px 0 0; color: #0f172a; font-size: 22px; font-weight: 700;">Week {{ current_week }}</h3>
+            </div>
+        </div>
 
-    <h3>Week by Week Plan</h3>
-    {% if weeks %}
-        <div style="display: flex; flex-direction: column; gap: 15px;">
-            {% for week in weeks %}
-                {% if week.week_number <= enrollment.current_week_unlocked %}
-                    <div style="border-left: 4px solid #007bff; background: #f8f9fa; padding: 15px; border-radius: 4px;">
-                        <h4 style="margin-top: 0; color: #0056b3;">Week {{ week.week_number }}: {{ week.title }}</h4>
-                        {% if week.description %}
-                        <p style="margin-bottom: 0;">{{ week.description|linebreaksbr }}</p>
-                        {% endif %}
-                    </div>
-                {% else %}
-                    <div style="border-left: 4px solid #6c757d; background: #e9ecef; padding: 15px; border-radius: 4px; opacity: 0.7;">
-                        <h4 style="margin-top: 0; color: #495057;">
-                            🔒 Week {{ week.week_number }}: Locked
-                        </h4>
-                        <p style="margin-bottom: 0; font-style: italic; color: #6c757d;">This week is currently locked. Pass previous weeks to unlock.</p>
-                    </div>
+        <!-- Card 2: Exams Attempted -->
+        <div style="flex: 1; min-width: 250px; background: white; border: 1px solid #e2e8f0; border-radius: 14px; padding: 24px; display: flex; align-items: center; gap: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+            <div style="width: 54px; height: 54px; background: #ecfdf5; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path>
+                    <path d="M9 12l2 2 4-4"></path>
+                </svg>
+            </div>
+            <div>
+                <p style="margin: 0; color: #64748b; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Exams Attempted</p>
+                <h3 style="margin: 4px 0 0; color: #0f172a; font-size: 22px; font-weight: 700;">{{ exams_attempted }} Session{{ exams_attempted|pluralize }}</h3>
+            </div>
+        </div>
+
+        <!-- Card 3: Fail Rate -->
+        <div style="flex: 1; min-width: 250px; background: white; border: 1px solid #e2e8f0; border-radius: 14px; padding: 24px; display: flex; align-items: center; gap: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+            <div style="width: 54px; height: 54px; background: #fff1f2; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+            </div>
+            <div>
+                <p style="margin: 0; color: #64748b; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Fail Rate</p>
+                <h3 style="margin: 4px 0 0; color: #0f172a; font-size: 22px; font-weight: 700;">{{ fail_rate }}%</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Session / Week Section -->
+    <div style="margin-bottom: 20px;">
+        <h3 style="margin: 0; color: #1e293b; font-size: 20px; font-weight: 700;">Active Learning Module</h3>
+        <p style="margin: 5px 0 0; color: #64748b; font-size: 14px;">This is your currently unlocked week's technical challenge. Click to begin your interview session.</p>
+    </div>
+
+    {% if active_week %}
+        <!-- Active Module Focus Card -->
+        <div style="background: white; border-radius: 16px; border: 2px solid #4f46e5; padding: 32px; box-shadow: 0 10px 20px -5px rgba(0,0,0,0.06); display: flex; flex-direction: column; md-flex-direction: row; justify-content: space-between; gap: 30px; align-items: flex-start;">
+            <div style="flex-grow: 1;">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
+                    <span style="background: #4f46e5; color: white; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px;">Week {{ active_week.week_number }}</span>
+                    <span style="background: #e0f2fe; color: #0369a1; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 20px; animation: pulse 2s infinite;">⚡ Active Assessment</span>
+                </div>
+                
+                <h4 style="margin: 0 0 15px; color: #1f2937; font-size: 22px; font-weight: 700;">{{ active_week.title }}</h4>
+                
+                {% if active_week.description %}
+                    <p style="margin: 0; color: #4b5563; font-size: 15px; line-height: 1.6; max-width: 800px;">
+                        {{ active_week.description }}
+                    </p>
                 {% endif %}
-            {% endfor %}
+            </div>
+
+            <div style="min-width: 200px; width: 100%; align-self: stretch; display: flex; align-items: flex-end; justify-content: flex-end;">
+                <a href="{% url 'interview' active_week.id %}" 
+                   style="display: inline-block; text-align: center; text-decoration: none; padding: 15px 35px; border-radius: 10px; font-weight: 700; font-size: 15px; transition: background 0.2s, transform 0.1s;
+                          background: #4f46e5; color: white; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);"
+                   onmouseover="this.style.background='#3730a3'; this.style.transform='translateY(-1px)'"
+                   onmouseout="this.style.background='#4f46e5'; this.style.transform='translateY(0)'"
+                   onmousedown="this.style.transform='translateY(1px)'">
+                   Start Interview →
+                </a>
+            </div>
         </div>
     {% else %}
-        <p>No study plan has been added for this course yet.</p>
+        <!-- Course Fully Completed State -->
+        <div style="background: white; border-radius: 16px; border: 2px solid #e2e8f0; padding: 40px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+            <div style="width: 72px; height: 72px; background: #fef3c7; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                <span style="font-size: 32px;">🏆</span>
+            </div>
+            <h4 style="margin: 0 0 10px; color: #1e293b; font-size: 22px; font-weight: 700;">Congratulations!</h4>
+            <p style="margin: 0 auto; color: #64748b; font-size: 15px; line-height: 1.6; max-width: 500px;">
+                You have completed all the weekly technical modules and mock interviews for this course. Excellent work!
+            </p>
+        </div>
     {% endif %}
 </div>
+
+<!-- Simple pulse animation for active badge -->
+<style>
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+</style>
 {% endblock %}

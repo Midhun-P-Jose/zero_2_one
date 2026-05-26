@@ -28,4 +28,19 @@ class Enrollment(models.Model):
     current_week_unlocked = models.PositiveIntegerField(default=1)
 
     def __str__(self):
-        return f"{self.user.username} enrolled in {self.course.name}"
+        return f"{self.user} enrolled in {self.course.name}"
+
+
+class Interview_questions(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='interview_questions')
+    week = models.ForeignKey(CourseWeek, on_delete=models.CASCADE)
+    data = models.JSONField(default=list)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Interview for {self.user} - Week {self.week.week_number}"
+
+
+
+
+
