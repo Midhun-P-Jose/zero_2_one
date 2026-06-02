@@ -1,15 +1,18 @@
 {% extends 'base.html' %}
 
-{% block title %}Login{% endblock %}
+{% block title %}Sign In{% endblock %}
 
 {% block content %}
-<h2>Login</h2>
+<h2>Welcome Back</h2>
+<p class="subtitle">Sign in to your learning portal to continue your practice</p>
+
 <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit">Login</button>
+    <button type="submit">Sign In</button>
 </form>
+
 <div class="links">
-    <p>Don't have an account? <a href="{% url 'signup' %}">Sign up here</a></p>
+    Don't have an account? <a href="{% url 'signup' %}">Sign up here</a>
 </div>
 {% endblock %}

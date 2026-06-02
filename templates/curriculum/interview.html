@@ -137,15 +137,15 @@
                 if (data.reply) {
                     appendMessage(data.reply, 'ai');
                 }
-                
-                if (data.finished) {
+                               if (data.finished) {
                     userInput.disabled = true;
                     sendBtn.disabled = true;
                     appendMessage("Assessment Complete! Reviewing results...", 'system');
                     
+                    const isTimeout = data.error === 'session_timeout';
                     // Delay displaying the modal for 1.5 seconds to let the user read the last message
                     setTimeout(() => {
-                        showCompletionModal(data.score);
+                        showCompletionModal(data.score, isTimeout);
                     }, 1500);
                 }
             } catch (error) {
@@ -178,8 +178,8 @@
             sendBtn.innerText = isLoading ? '...' : 'Send';
         }
 
-        function showCompletionModal(score) {
-            const passed = score >= 70;
+        function showCompletionModal(score, isTimeout = false) {
+            const passed = score >= 70 && !isTimeout;
             
             if (passed) {
                 // Success configuration
@@ -206,9 +206,13 @@
                         <line x1="9" y1="9" x2="15" y2="15"></line>
                     </svg>
                 `;
-                modalTitle.innerText = "Assessment Failed";
+                modalTitle.innerText = isTimeout ? "Interview Timed Out" : "Assessment Failed";
                 modalTitle.style.color = '#b91c1c';
-                modalDesc.innerHTML = `You scored <strong>${score}/100</strong>. You need $\\ge 70$ to unlock the next module. Would you like to try again?`;
+                if (isTimeout) {
+                    modalDesc.innerHTML = `You did not complete the interview within the 30-minute limit. This attempt has timed out and is counted as a failure (score: 0/100).`;
+                } else {
+                    modalDesc.innerHTML = `You scored <strong>${score}/100</strong>. You need &ge; 70 to unlock the next module. Would you like to try again?`;
+                }
                 modalRetryBtn.style.display = 'block';
                 modalCancelBtn.innerText = "Dashboard";
             }
@@ -225,6 +229,11 @@
             // Reload the page to start a new attempt
             window.location.reload();
         };
+
+        // Automatically trigger timeout modal if page loaded with a timeout warning
+        {% if show_timeout_warning %}
+            showCompletionModal(0, true);
+        {% endif %}
     </script>
 {% endif %}
 {% endblock %}

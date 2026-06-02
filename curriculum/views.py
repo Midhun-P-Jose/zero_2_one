@@ -160,6 +160,7 @@ def interview(request, week_id):
     # Load current active session data
     interview_session = all_sessions.last()
     chat_history = []
+    show_timeout_warning = False
     if interview_session:
         # Check if the latest session is finished
         is_latest_finished = False
@@ -173,6 +174,20 @@ def interview(request, week_id):
                 for msg in interview_session.data
             )
             
+        # Check if the session has timed out (older than 30 minutes)
+        if not is_latest_finished and interview_session.created_at:
+            if timezone.now() > interview_session.created_at + timedelta(minutes=30):
+                # Mark as finished/timeout with score 0
+                interview_session.data.append({
+                    "role": "system_metadata",
+                    "finished": True,
+                    "score": 0,
+                    "timeout": True
+                })
+                interview_session.save()
+                is_latest_finished = True
+                show_timeout_warning = True
+                
         if not is_latest_finished:
             # Still active, load chat history
             chat_history = interview_session.data
@@ -189,7 +204,8 @@ def interview(request, week_id):
         'chat_history': chat_history,
         'is_blocked': is_blocked,
         'blocked_until': blocked_until,
-        'remaining_time_str': remaining_time_str
+        'remaining_time_str': remaining_time_str,
+        'show_timeout_warning': show_timeout_warning
     })
 
 @login_required
@@ -244,21 +260,76 @@ def chat_api(request, week_id):
                     for msg in interview_session.data
                 )
                 
+            # Check if the session has timed out (older than 30 minutes)
+            if not is_latest_finished and interview_session.created_at:
+                if timezone.now() > interview_session.created_at + timedelta(minutes=30):
+                    # Mark as finished/timeout with score 0
+                    interview_session.data.append({
+                        "role": "system_metadata",
+                        "finished": True,
+                        "score": 0,
+                        "timeout": True
+                    })
+                    interview_session.save()
+                    return JsonResponse({
+                        "reply": "This interview session has timed out (maximum 30 minutes allowed). This has been marked as a failed attempt.",
+                        "finished": True,
+                        "score": 0,
+                        "error": "session_timeout"
+                    })
+                
         if not interview_session or is_latest_finished:
             interview_session = Interview_questions.objects.create(
                 user=request.user,
                 week=week
             )
         
-        # 2. Proxy request to FastAPI
+        # Get registration week cohort details
+        from django.contrib.auth.models import User
+        user = request.user
+        candidate_name = user.first_name or user.username or "Candidate"
+        candidate_email = user.email or "Not provided"
+        candidate_joined = user.date_joined.isoformat() if user.date_joined else "Unknown"
+        
+        week_users_count = 0
+        week_users_list = []
+        if user.date_joined:
+            start_of_week = user.date_joined - timedelta(days=user.date_joined.weekday())
+            start_of_week = start_of_week.replace(hour=0, minute=0, second=0, microsecond=0)
+            end_of_week = start_of_week + timedelta(days=7)
+            
+            cohort = User.objects.filter(date_joined__range=(start_of_week, end_of_week))
+            week_users_count = cohort.count()
+            for u in cohort[:5]:
+                name = u.first_name or u.username or u.email
+                if name:
+                    week_users_list.append(str(name))
+                    
+        # Calculate interview timing
+        interview_start_time = "Unknown"
+        elapsed_minutes = 0.0
+        if interview_session.created_at:
+            interview_start_time = interview_session.created_at.isoformat()
+            now = timezone.now()
+            diff_seconds = (now - interview_session.created_at).total_seconds()
+            elapsed_minutes = max(0.0, diff_seconds / 60.0)
+
+        # 2. Proxy request to FastAPI with complete database context
         try:
-            # We send the message and current transcript to FastAPI
             payload = {
                 "message": user_message,
                 "history": interview_session.data,
+                "candidate_name": candidate_name,
+                "candidate_email": candidate_email,
+                "candidate_joined": candidate_joined,
+                "week_users_count": week_users_count,
+                "week_users_list": week_users_list,
+                "course_name": week.course.name,
+                "week_number": week.week_number,
                 "week_title": week.title,
-                "user_id": request.user.id,
-                "week_id": week.id
+                "week_description": week.description or "General assessment",
+                "interview_start_time": interview_start_time,
+                "elapsed_minutes": elapsed_minutes
             }
             response = requests.post(FASTAPI_CHAT_URL, json=payload, timeout=60)
             if response.status_code != 200:

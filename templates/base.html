@@ -4,80 +4,301 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Django Authentication{% endblock %}</title>
+    <!-- Premium Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --primary-glow: rgba(37, 99, 235, 0.12);
+            --bg-base: #f0f7ff;
+            --card-bg: rgba(255, 255, 255, 0.75);
+            --card-border: rgba(255, 255, 255, 0.6);
+            --input-bg: rgba(255, 255, 255, 0.9);
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --error-color: #dc2626;
+            --error-bg: rgba(220, 38, 38, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-base);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            padding: 2rem 1rem;
+            color: var(--text-main);
+            position: relative;
+            /* Allow vertical scrolling on smaller screens or long forms */
+            overflow-x: hidden;
+            overflow-y: auto;
         }
-        .container {
-            background: #fff;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+        /* SVG Background Graphics (Waves & Grid Pattern) */
+        .background-graphics {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
-            max-width: 400px;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
         }
+
+        .bg-grid {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(rgba(37, 99, 235, 0.09) 1px, transparent 1px);
+            background-size: 24px 24px;
+            opacity: 0.8;
+        }
+
+        .bg-wave {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: auto;
+            min-height: 40%;
+            opacity: 0.7;
+        }
+
+        .bg-wave-top {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 70%;
+            transform: rotate(180deg);
+            opacity: 0.4;
+        }
+
+        .container {
+            background: var(--card-bg);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--card-border);
+            padding: 2.5rem 2rem;
+            border-radius: 24px;
+            box-shadow: 
+                0 10px 30px -10px rgba(37, 99, 235, 0.06),
+                0 30px 60px -15px rgba(15, 23, 42, 0.08);
+            width: 100%;
+            max-width: 460px;
+            z-index: 10;
+            animation: cardEntrance 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            margin: auto; /* Centering behavior in scrolling container */
+        }
+
+        /* Learning Icon Holder */
+        .card-header-icon {
+            width: 52px;
+            height: 52px;
+            margin: 0 auto 1.25rem auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #ffffff 0%, #dbeafe 100%);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 16px;
+            box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+        }
+
         h2 {
-            margin-top: 0;
-            color: #333;
+            font-size: 1.65rem;
+            font-weight: 700;
+            margin-bottom: 0.4rem;
+            color: #0f172a;
+            letter-spacing: -0.03em;
+            text-align: center;
         }
+
+        .subtitle {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 1.75rem;
+            text-align: center;
+            font-weight: 400;
+            line-height: 1.4;
+        }
+
         form {
             display: flex;
             flex-direction: column;
+            gap: 1.15rem;
         }
+
         form p {
             display: flex;
             flex-direction: column;
-            margin-bottom: 1rem;
+            gap: 0.4rem;
         }
+
         label {
-            margin-bottom: 0.5rem;
-            color: #555;
+            font-size: 0.825rem;
+            font-weight: 600;
+            color: #475569;
         }
-        input[type="text"], input[type="password"] {
-            padding: 0.5rem;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 1rem;
+
+        input[type="text"], 
+        input[type="password"], 
+        input[type="email"] {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            background-color: var(--input-bg);
+            border: 1px solid rgba(203, 213, 225, 0.8);
+            border-radius: 12px;
+            font-size: 0.925rem;
+            font-family: inherit;
+            color: var(--text-main);
+            transition: all 0.25s ease;
+            outline: none;
+            box-shadow: 0 2px 4px rgba(37, 99, 235, 0.02);
         }
+
+        input[type="text"]:focus, 
+        input[type="password"]:focus, 
+        input[type="email"]:focus {
+            border-color: var(--primary);
+            background-color: #ffffff;
+            box-shadow: 0 0 0 4px var(--primary-glow);
+        }
+
         button {
-            padding: 0.75rem;
-            background-color: #007bff;
+            width: 100%;
+            padding: 0.85rem;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
             color: #fff;
             border: none;
-            border-radius: 4px;
-            font-size: 1rem;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            font-family: inherit;
             cursor: pointer;
-            margin-top: 1rem;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.18);
+            margin-top: 0.25rem;
         }
+
         button:hover {
-            background-color: #0056b3;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(37, 99, 235, 0.28);
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
         }
+
+        button:active {
+            transform: translateY(0);
+        }
+
         .helptext {
-            font-size: 0.8rem;
-            color: #888;
+            font-size: 0.775rem;
+            color: var(--text-muted);
+            line-height: 1.35;
         }
+
+        .helptext ul {
+            list-style: none;
+            padding-left: 0;
+            margin-top: 0.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
         .links {
-            margin-top: 1rem;
+            margin-top: 1.75rem;
             text-align: center;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            border-top: 1px solid rgba(226, 232, 240, 0.5);
+            padding-top: 1.15rem;
         }
+
         .links a {
-            color: #007bff;
+            color: var(--primary);
             text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s ease;
         }
+
         .links a:hover {
-            text-decoration: underline;
+            color: var(--primary-hover);
+        }
+
+        .errorlist {
+            list-style: none;
+            padding: 0.75rem 1rem;
+            background-color: var(--error-bg);
+            border: 1px solid rgba(220, 38, 38, 0.1);
+            border-radius: 12px;
+            color: var(--error-color);
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        @keyframes cardEntrance {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 1.5rem 0.75rem;
+            }
+            .container {
+                padding: 2rem 1.25rem;
+                border-radius: 20px;
+            }
+            h2 {
+                font-size: 1.5rem;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Background SVG Waves and Grids -->
+    <div class="background-graphics">
+        <div class="bg-grid"></div>
+        <!-- Modern clean abstract waves at bottom -->
+        <svg class="bg-wave" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" preserveAspectRatio="none">
+            <path fill="rgba(37, 99, 235, 0.05)" fill-opacity="1" d="M0,192L48,197.3C96,203,192,213,288,208C384,203,480,181,576,181.3C672,181,768,203,864,197.3C960,192,1056,160,1152,144C1248,128,1344,128,1392,128L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+            <path fill="rgba(56, 189, 248, 0.06)" fill-opacity="1" d="M0,96L80,112C160,128,320,160,480,165.3C640,171,800,149,960,138.7C1120,128,1280,128,1360,128L1440,128L1440,320L1360,320C1280,320,1120,320,960,320C800,320,640,320,480,320C320,320,160,320,80,320L0,320Z"></path>
+        </svg>
+        <!-- Top Wave Rotation -->
+        <svg class="bg-wave-top" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" preserveAspectRatio="none">
+            <path fill="rgba(59, 130, 246, 0.04)" fill-opacity="1" d="M0,160L80,154.7C160,149,320,139,480,149.3C640,160,800,192,960,181.3C1120,171,1280,117,1360,90.7L1440,64L1440,320L1360,320C1280,320,1120,320,960,320C800,320,640,320,480,320C320,320,160,320,80,320L0,320Z"></path>
+        </svg>
+    </div>
+
     <div class="container">
+        <div class="card-header-icon">
+            <!-- Learning Representation: Graduation Cap / Mortarboard SVG -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/>
+            </svg>
+        </div>
         {% block content %}{% endblock %}
     </div>
 </body>

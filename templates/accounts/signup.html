@@ -3,13 +3,16 @@
 {% block title %}Sign Up{% endblock %}
 
 {% block content %}
-<h2>Sign Up</h2>
+<h2>Create Account</h2>
+<p class="subtitle">Join our learning platform and master your skills</p>
+
 <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
     <button type="submit">Sign Up</button>
 </form>
+
 <div class="links">
-    <p>Already have an account? <a href="{% url 'login' %}">Login here</a></p>
+    Already have an account? <a href="{% url 'login' %}">Login here</a>
 </div>
 {% endblock %}
