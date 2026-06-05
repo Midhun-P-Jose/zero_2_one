@@ -1,0 +1,106 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<!-- Load custom outfit font and stylesheet -->
+<link rel="stylesheet" href="{% static 'curriculum/css/custom_admin.css' %}">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Self-executing script to load saved theme immediately to prevent light flashes -->
+<script>
+    (function () {
+        const savedTheme = localStorage.getItem('admin-theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+</script>
+
+<style>
+  /* Define CSS Variables for Light Mode and Dark Mode */
+  :root, [data-theme="light"] {
+      --body-bg: #f5f3ff !important;
+      --body-fg: #1e1b4b !important;
+      --input-bg: #ffffff !important;
+      --input-fg: #1e1b4b !important;
+      --border-color: #ddd6fe !important;
+      --primary: #6366f1 !important;
+      --card-bg: #ffffff !important;
+      --card-title-bg: #fdfcff !important;
+      --tr-hover: #faf5ff !important;
+  }
+
+  [data-theme="dark"] {
+      --body-bg: #090d16 !important;
+      --body-fg: #f8fafc !important;
+      --input-bg: #1e293b !important;
+      --input-fg: #f8fafc !important;
+      --border-color: #334155 !important;
+      --primary: #818cf8 !important;
+      --card-bg: #0f172a !important;
+      --card-title-bg: #1e293b !important;
+      --tr-hover: #1e1b4b !important;
+  }
+
+  /* Force variables to inherit correctly on input fields */
+  select, 
+  select option, 
+  select:focus,
+  input, 
+  input:focus, 
+  textarea, 
+  textarea:focus,
+  .vTextField,
+  .vForeignKeyRawIdAdminField {
+      color: var(--input-fg) !important;
+      background-color: var(--input-bg) !important;
+      background: var(--input-bg) !important;
+      border-color: var(--border-color) !important;
+  }
+
+  /* Force options to match select styling */
+  select * {
+      color: var(--input-fg) !important;
+      background-color: var(--input-bg) !important;
+  }
+</style>
+{% endblock %}
+
+{% block branding %}
+<div style="display: flex; align-items: center; gap: 10px;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: #c084fc; vertical-align: middle;">
+        <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+        <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/>
+    </svg>
+    <h1 id="site-name" style="margin: 0; font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 20px;">
+        <a href="{% url 'admin:index' %}">Job Assistant Administration</a>
+    </h1>
+</div>
+{% endblock %}
+
+{% block nav-global %}
+<!-- Night Vision Theme Toggler (replaces view site dashboard links) -->
+<div class="user-tools-custom" style="display: flex; gap: 15px; align-items: center; font-family: 'Outfit', sans-serif;">
+    <button id="admin-theme-toggle" style="background: transparent; border: 1px solid rgba(255,255,255,0.3); color: #ffffff; cursor: pointer; padding: 6px 14px; border-radius: 20px; display: flex; align-items: center; gap: 6px; font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">
+        <svg class="moon-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+        <span>Night Vision</span>
+    </button>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleBtn = document.getElementById('admin-theme-toggle');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function() {
+                const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+                const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', nextTheme);
+                localStorage.setItem('admin-theme', nextTheme);
+            });
+        }
+    });
+</script>
+{% endblock %}

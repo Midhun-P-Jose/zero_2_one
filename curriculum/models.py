@@ -40,6 +40,10 @@ class Interview_questions(models.Model):
     completed_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        verbose_name = "Interview Question"
+        verbose_name_plural = "Interview Questions"
+
     def __str__(self):
         return f"Interview for {self.user} - Week {self.week.week_number}"
 

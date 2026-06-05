@@ -15,6 +15,9 @@ FASTAPI_CHAT_URL = "http://127.0.0.1:8001/chat"
 @login_required
 @never_cache
 def course_selection(request):
+    if request.user.is_superuser:
+        return redirect('admin:index')
+
     # If the user is already enrolled, redirect to their dashboard
     if hasattr(request.user, 'enrollment'):
         return redirect('curriculum_dashboard')
@@ -25,6 +28,9 @@ def course_selection(request):
 @login_required
 @never_cache
 def enroll(request, course_id):
+    if request.user.is_superuser:
+        return redirect('admin:index')
+
     if request.method == 'POST':
         if not hasattr(request.user, 'enrollment'):
             course = get_object_or_404(Course, id=course_id)
@@ -35,6 +41,8 @@ def enroll(request, course_id):
 @login_required
 @never_cache
 def dashboard(request):
+    if request.user.is_superuser:
+        return redirect('admin:index')
 
     if not hasattr(request.user, 'enrollment'):
         messages.info(request, "Your previous enrollment was removed. Please select a course to continue.")
@@ -66,6 +74,9 @@ def dashboard(request):
 @login_required
 @never_cache
 def weekly_tasks(request):
+    if request.user.is_superuser:
+        return redirect('admin:index')
+
     if not hasattr(request.user, 'enrollment'):
         messages.info(request, "Your previous enrollment was removed. Please select a course to continue.")
         return redirect('course_selection')
@@ -83,6 +94,9 @@ def weekly_tasks(request):
 @login_required
 @never_cache
 def interview(request, week_id):
+    if request.user.is_superuser:
+        return redirect('admin:index')
+
     week = get_object_or_404(CourseWeek, id=week_id)
     enrollment = get_object_or_404(Enrollment, user=request.user)
     
@@ -95,18 +109,16 @@ def interview(request, week_id):
     blocked_until = None
     remaining_time_str = ""
     
-    # Get all finished attempts
-    all_sessions = Interview_questions.objects.filter(user=request.user, week=week).order_by('created_at')
-    completed_sessions = []
+    # Get ONLY the last 2 finished attempts (ordered by newest first)
+    completed_sessions = Interview_questions.objects.filter(
+        user=request.user, 
+        week=week, 
+        is_finished=True
+    ).order_by('-created_at')[:2]
     
-    for session in all_sessions:
-        if session.is_finished:
-            completed_sessions.append((session, session.score or 0))
-            
-    if len(completed_sessions) >= 2:
-        last_two = completed_sessions[-2:]
-        if last_two[0][1] < 70 and last_two[1][1] < 70:
-            second_fail_session = last_two[1][0]
+    if len(completed_sessions) == 2:
+        if completed_sessions[0].score < 70 and completed_sessions[1].score < 70:
+            second_fail_session = completed_sessions[0]
             blocked_until = second_fail_session.created_at + timedelta(days=3)
             
             if timezone.now() < blocked_until:
@@ -123,7 +135,7 @@ def interview(request, week_id):
                      remaining_time_str = f"{minutes} minute{'s' if minutes != 1 else ''}"
                      
     # Load current active session data
-    interview_session = all_sessions.last()
+    interview_session = Interview_questions.objects.filter(user=request.user, week=week).order_by('created_at').last()
     chat_history = []
     show_timeout_warning = False
     remaining_seconds = 1800
@@ -182,23 +194,21 @@ def chat_api(request, week_id):
         enrollment = get_object_or_404(Enrollment, user=request.user)
         
         # Check attempts/blocking
-        all_sessions = Interview_questions.objects.filter(user=request.user, week=week).order_by('created_at')
-        completed_sessions = []
+        completed_sessions = Interview_questions.objects.filter(
+            user=request.user, 
+            week=week, 
+            is_finished=True
+        ).order_by('-created_at')[:2]
         
-        for session in all_sessions:
-            if session.is_finished:
-                completed_sessions.append((session, session.score or 0))
-                
-        if len(completed_sessions) >= 2:
-            last_two = completed_sessions[-2:]
-            if last_two[0][1] < 70 and last_two[1][1] < 70:
-                second_fail_session = last_two[1][0]
+        if len(completed_sessions) == 2:
+            if completed_sessions[0].score < 70 and completed_sessions[1].score < 70:
+                second_fail_session = completed_sessions[0]
                 blocked_until = second_fail_session.created_at + timedelta(days=3)
                 if timezone.now() < blocked_until:
                     return JsonResponse({"error": "Assessment locked for 3 days due to consecutive failures."}, status=403)
                     
         # 1. Fetch or create the interview session record (latest active session)
-        interview_session = all_sessions.last()
+        interview_session = Interview_questions.objects.filter(user=request.user, week=week).order_by('created_at').last()
         is_latest_finished = False
         if interview_session:
             is_latest_finished = interview_session.is_finished
@@ -229,28 +239,10 @@ def chat_api(request, week_id):
                 user=request.user,
                 week=week
             )
-        
-        # Get registration week cohort details
-        from django.contrib.auth.models import User
+
         user = request.user
         candidate_name = user.first_name or user.username or "Candidate"
-        candidate_email = user.email or "Not provided"
-        candidate_joined = user.date_joined.isoformat() if user.date_joined else "Unknown"
         
-        week_users_count = 0
-        week_users_list = []
-        if user.date_joined:
-            start_of_week = user.date_joined - timedelta(days=user.date_joined.weekday())
-            start_of_week = start_of_week.replace(hour=0, minute=0, second=0, microsecond=0)
-            end_of_week = start_of_week + timedelta(days=7)
-            
-            cohort = User.objects.filter(date_joined__range=(start_of_week, end_of_week))
-            week_users_count = cohort.count()
-            for u in cohort[:5]:
-                name = u.first_name or u.username or u.email
-                if name:
-                    week_users_list.append(str(name))
-                    
         # Calculate interview timing
         interview_start_time = "Unknown"
         elapsed_minutes = 0.0
@@ -266,10 +258,6 @@ def chat_api(request, week_id):
                 "message": user_message,
                 "history": interview_session.data,
                 "candidate_name": candidate_name,
-                "candidate_email": candidate_email,
-                "candidate_joined": candidate_joined,
-                "week_users_count": week_users_count,
-                "week_users_list": week_users_list,
                 "course_name": week.course.name,
                 "week_number": week.week_number,
                 "week_title": week.title,
@@ -277,7 +265,7 @@ def chat_api(request, week_id):
                 "interview_start_time": interview_start_time,
                 "elapsed_minutes": elapsed_minutes
             }
-            response = requests.post(FASTAPI_CHAT_URL, json=payload, timeout=60)
+            response = requests.post(FASTAPI_CHAT_URL, json=payload, timeout=30)
             if response.status_code != 200:
                 try:
                     error_detail = response.json().get('detail', 'FastAPI internal error')

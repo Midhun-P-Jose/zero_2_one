@@ -1,0 +1,462 @@
+/* ==========================================
+   Job Assistant Premium Indigo-Violet Theme (Adaptive Dark Mode support)
+   ========================================== */
+
+/* Import Outfit Font */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+/* Global Reset & Typography & Variables Override */
+body {
+    font-family: 'Outfit', sans-serif !important;
+    background-color: var(--body-bg) !important;
+    color: var(--body-fg) !important;
+    margin: 0;
+    padding: 0;
+    transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+a {
+    color: var(--primary);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+a:hover {
+    filter: brightness(1.2);
+}
+
+/* Specific Select dropdown overrides to prevent browser-forced styling bugs */
+select, 
+select:focus,
+select option,
+.form-row select,
+.form-row select option,
+.aligned select,
+.aligned select option,
+#content-main select,
+#content-main select option {
+    color: var(--input-fg) !important;
+    background-color: var(--input-bg) !important;
+}
+
+/* Header Bar Styling - Premium Gradient Header */
+#header {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+    color: #ffffff !important;
+    padding: 18px 28px !important;
+    border-bottom: none !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    box-shadow: 0 4px 20px rgba(79, 70, 229, 0.15) !important;
+}
+
+#header a {
+    color: #ffffff !important;
+    opacity: 0.9;
+}
+
+#header a:hover {
+    opacity: 1;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+#branding h1 {
+    font-weight: 700 !important;
+    margin: 0 !important;
+    font-size: 22px !important;
+    letter-spacing: -0.03em !important;
+}
+
+#user-tools {
+    float: none !important;
+    margin: 0 !important;
+    font-weight: 500 !important;
+    font-size: 14px !important;
+    color: #e0e7ff !important;
+}
+
+/* Breadcrumbs Styling */
+.breadcrumbs {
+    background: var(--card-bg) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    padding: 12px 28px !important;
+    font-size: 13.5px !important;
+    color: var(--body-fg) !important;
+    opacity: 0.8;
+    font-weight: 500 !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02) !important;
+}
+
+.breadcrumbs a {
+    color: var(--primary) !important;
+}
+
+.breadcrumbs a:hover {
+    text-decoration: underline !important;
+}
+
+/* Page Containers */
+#content {
+    padding: 28px !important;
+    max-width: 1400px !important;
+    margin: 0 auto !important;
+}
+
+h1 {
+    font-size: 26px !important;
+    font-weight: 700 !important;
+    color: var(--body-fg) !important;
+    margin-bottom: 24px !important;
+    letter-spacing: -0.03em !important;
+}
+
+/* Modules (Cards) styling */
+.module {
+    background: var(--card-bg) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+    margin-bottom: 28px !important;
+    overflow: hidden !important;
+}
+
+.module h2, .module caption {
+    background: var(--card-title-bg) !important;
+    color: var(--primary) !important;
+    font-weight: 700 !important;
+    font-size: 16px !important;
+    padding: 14px 20px !important;
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+/* Tables styling */
+table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+}
+
+th, td {
+    padding: 14px 20px !important;
+    font-size: 14.5px !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    text-align: left !important;
+    color: var(--body-fg) !important;
+}
+
+th {
+    background: var(--card-title-bg) !important;
+    color: var(--primary) !important;
+    font-weight: 600 !important;
+}
+
+tr:hover td {
+    background-color: var(--tr-hover) !important;
+}
+
+/* Changelist search and actions */
+#toolbar {
+    background: var(--card-bg) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 12px !important;
+    padding: 14px 20px !important;
+    margin-bottom: 20px !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;
+}
+
+#changelist-search input[type="text"] {
+    border: 1px solid var(--border-color) !important;
+    border-radius: 8px !important;
+    padding: 8px 14px !important;
+    font-size: 14px !important;
+    background-color: var(--input-bg) !important;
+    color: var(--input-fg) !important;
+}
+
+#changelist-search input[type="submit"] {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+    border: none !important;
+    color: #ffffff !important;
+    padding: 9px 20px !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    box-shadow: 0 4px 10px rgba(79, 70, 229, 0.15) !important;
+    transition: all 0.2s !important;
+}
+
+#changelist-search input[type="submit"]:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 14px rgba(79, 70, 229, 0.25) !important;
+}
+
+.actions {
+    background: var(--card-title-bg) !important;
+    border: 1px solid var(--border-color) !important;
+    padding: 12px 20px !important;
+    border-radius: 12px !important;
+    margin-bottom: 20px !important;
+    font-size: 14px !important;
+    color: var(--body-fg) !important;
+}
+
+.actions select {
+    border: 1px solid var(--border-color) !important;
+    border-radius: 8px !important;
+    padding: 7px 12px !important;
+    background: var(--input-bg) !important;
+    color: var(--input-fg) !important;
+}
+
+/* Form inputs & controls (Force High Visibility) */
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+input[type="datetime-local"],
+input[type="date"],
+input[type="time"],
+textarea,
+select,
+.vTextField {
+    background-color: var(--input-bg) !important;
+    color: var(--input-fg) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 10px !important;
+    padding: 12px 16px !important;
+    font-size: 14.5px !important;
+    width: 100% !important;
+    max-width: 500px !important;
+    box-sizing: border-box !important;
+    outline: none !important;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+textarea:focus,
+select:focus,
+.vTextField:focus {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.12) !important;
+}
+
+/* Checkboxes & Radios */
+input[type="checkbox"] {
+    width: 18px !important;
+    height: 18px !important;
+    cursor: pointer !important;
+    accent-color: var(--primary) !important;
+}
+
+/* Textarea specifically */
+textarea {
+    max-width: 100% !important;
+    min-height: 130px !important;
+}
+
+/* Form Row Alignment and Spacing */
+.aligned .form-row {
+    padding: 20px 24px !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+}
+
+.aligned .form-row > div {
+    display: flex !important;
+    width: 100% !important;
+    align-items: center !important;
+}
+
+.aligned .form-row label {
+    font-weight: 600 !important;
+    color: var(--primary) !important;
+    width: 200px !important;
+    flex-shrink: 0 !important;
+    font-size: 14.5px !important;
+}
+
+.aligned .form-row input, .aligned .form-row select, .aligned .form-row textarea {
+    flex-grow: 1 !important;
+}
+
+/* Tabular inline forms fixes (restore normal table cell alignments) */
+table tr.form-row {
+    display: table-row !important;
+}
+
+table td.form-row {
+    display: table-cell !important;
+}
+
+.tabular td input, 
+.tabular td select, 
+.tabular td textarea,
+.tabular td .vTextField,
+.tabular td .vDateField,
+.tabular td .vTimeField {
+    max-width: 100% !important;
+    width: 100% !important;
+}
+
+/* Django date/time shortcuts styling */
+.datetime {
+    display: flex !important;
+    gap: 12px !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    width: 100% !important;
+}
+
+.datetime input {
+    max-width: 180px !important;
+}
+
+.datetimeshortcuts {
+    font-size: 12px !important;
+    color: var(--primary) !important;
+}
+
+.datetimeshortcuts a {
+    font-weight: 600 !important;
+    color: var(--primary) !important;
+}
+
+/* Submit row styling */
+.submit-row {
+    background: var(--card-title-bg) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 16px !important;
+    padding: 18px 24px !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    gap: 12px !important;
+    margin-top: 28px !important;
+}
+
+.submit-row input, .submit-row a {
+    width: auto !important;
+    padding: 12px 24px !important;
+    border-radius: 10px !important;
+    font-weight: 600 !important;
+    font-size: 14.5px !important;
+    cursor: pointer !important;
+    border: none !important;
+    transition: all 0.2s !important;
+}
+
+.submit-row input[type="submit"] {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 10px rgba(79, 70, 229, 0.15) !important;
+}
+
+.submit-row input[type="submit"]:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 14px rgba(79, 70, 229, 0.25) !important;
+}
+
+.submit-row input[name="_save"] {
+    background: #1e1b4b !important;
+    color: #ffffff !important;
+}
+
+.submit-row input[name="_save"]:hover {
+    background: #0f0e26 !important;
+}
+
+.submit-row input.default {
+    background: #10b981 !important;
+    color: #ffffff !important;
+}
+
+.submit-row input.default:hover {
+    background: #059669 !important;
+}
+
+/* Sidebar filter section in changelist */
+#changelist-filter {
+    background: var(--card-bg) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 16px !important;
+    padding: 20px !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
+}
+
+#changelist-filter h2 {
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    color: var(--primary) !important;
+    margin-top: 0 !important;
+    margin-bottom: 14px !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    padding-bottom: 10px !important;
+}
+
+#changelist-filter ul {
+    list-style: none !important;
+    padding-left: 0 !important;
+    margin: 0 !important;
+}
+
+#changelist-filter li {
+    margin-bottom: 10px !important;
+    font-size: 14px !important;
+}
+
+#changelist-filter li a {
+    color: var(--body-fg) !important;
+    opacity: 0.8;
+}
+
+#changelist-filter li.selected a {
+    color: var(--primary) !important;
+    font-weight: 700 !important;
+    opacity: 1 !important;
+}
+
+/* Responsive Overrides */
+@media (max-width: 991.98px) {
+    #header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+    }
+    
+    .form-row {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+    }
+    
+    .form-row > div {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+    }
+    
+    .form-row label {
+        width: 100% !important;
+        margin-bottom: 8px !important;
+    }
+    
+    input[type="text"],
+    input[type="number"],
+    .vTextField,
+    textarea,
+    select {
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+
+    #changelist {
+        flex-direction: column !important;
+    }
+
+    #changelist-filter {
+        width: 100% !important;
+        margin-top: 20px !important;
+    }
+}

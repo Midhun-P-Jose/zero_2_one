@@ -149,6 +149,32 @@
             </div>
         </div>
 
+        <!-- Result Banner (Sticky at the top, non-blocking) -->
+        <div id="result-banner"
+            style="display: none; padding: 16px 20px; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); animation: slideDown 0.3s ease; flex-shrink: 0;">
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <div id="banner-icon-container"
+                    style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <div id="banner-icon-wrapper"></div>
+                </div>
+                <div style="text-align: left;">
+                    <h4 id="banner-title" style="margin: 0; font-size: 15px; font-weight: 700;">Result Status</h4>
+                    <p id="banner-desc" style="margin: 3px 0 0; font-size: 13px; color: var(--text-light); line-height: 1.4;"></p>
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center; flex-shrink: 0;">
+                <a href="{% url 'curriculum_dashboard' %}"
+                    style="display: inline-block; background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-dark); text-decoration: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 13px; transition: all 0.2s;">
+                    Dashboard
+                </a>
+                <button id="banner-retry-btn"
+                    style="background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; transition: background 0.2s;"
+                    onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'">
+                    Try Again
+                </button>
+            </div>
+        </div>
+
         <!-- Chat Window -->
         <div id="chat-window"
             style="flex-grow: 1; background: var(--bg-main); padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth;">
@@ -213,33 +239,14 @@
         <!-- Monaco Container -->
         <div id="monaco-editor-container"></div>
     </div>
+</div>
 
-    <!-- Try Again / Result Modal Overlay -->
-    <div id="retry-modal"
-        style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 50; align-items: center; justify-content: center;">
-        <div class="theme-card"
-            style="max-width: 480px; width: 90%; padding: 32px; border-radius: 16px; text-align: center; border: 1px solid var(--card-border);">
-            <div id="modal-icon-container"
-                style="width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
-                <div id="modal-icon-wrapper"></div>
-            </div>
-            <h3 id="modal-title" style="margin: 0 0 10px; font-size: 20px; font-weight: 700;">Interview Status</h3>
-            <p id="modal-desc" style="margin: 0 0 24px; font-size: 14.5px; line-height: 1.6;"></p>
-            <div style="display: flex; gap: 12px; justify-content: center;">
-                <button id="modal-cancel-btn"
-                    style="flex: 1; padding: 12px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-light); border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; transition: background 0.2s;"
-                    onmouseover="this.style.background='var(--border-color)'"
-                    onmouseout="this.style.background='var(--card-bg)'">
-                    Dashboard
-                </button>
-                <button id="modal-retry-btn"
-                    style="flex: 1; padding: 12px; border: none; background: #2563eb; color: white; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; transition: background 0.2s;"
-                    onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'">
-                    Try Again
-                </button>
-            </div>
-        </div>
-    </div>
+<style>
+    @keyframes slideDown {
+        from { transform: translateY(-20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+</style>
 </div>
 
 <!-- Include Monaco Editor CDNs -->
@@ -252,14 +259,13 @@
     const submitCodeBtn = document.getElementById('submit-code-btn');
     const languageSelect = document.getElementById('language-select');
 
-    // Modal components
-    const retryModal = document.getElementById('retry-modal');
-    const modalIconWrapper = document.getElementById('modal-icon-wrapper');
-    const modalIconContainer = document.getElementById('modal-icon-container');
-    const modalTitle = document.getElementById('modal-title');
-    const modalDesc = document.getElementById('modal-desc');
-    const modalCancelBtn = document.getElementById('modal-cancel-btn');
-    const modalRetryBtn = document.getElementById('modal-retry-btn');
+    // Banner components
+    const resultBanner = document.getElementById('result-banner');
+    const bannerIconWrapper = document.getElementById('banner-icon-wrapper');
+    const bannerIconContainer = document.getElementById('banner-icon-container');
+    const bannerTitle = document.getElementById('banner-title');
+    const bannerDesc = document.getElementById('banner-desc');
+    const bannerRetryBtn = document.getElementById('banner-retry-btn');
 
     // Countdown Timer Config
     let timerInterval = null;
@@ -363,7 +369,7 @@
         submitCodeBtn.disabled = true;
         appendMessage("Interview session time limit reached. Ending session...", 'system');
         setTimeout(() => {
-            showCompletionModal(0, true);
+            showCompletionBanner(0, true);
         }, 1500);
     }
 
@@ -402,7 +408,7 @@
 
                 const isTimeout = data.error === 'session_timeout';
                 setTimeout(() => {
-                    showCompletionModal(data.score, isTimeout);
+                    showCompletionBanner(data.score, isTimeout);
                 }, 1500);
             }
         } catch (error) {
@@ -466,56 +472,51 @@
         submitCodeBtn.innerText = isLoading ? '...' : 'Submit Code';
     }
 
-    function showCompletionModal(score, isTimeout = false) {
+    function showCompletionBanner(score, isTimeout = false) {
         const passed = score >= 70 && !isTimeout;
 
         if (passed) {
-            modalIconContainer.style.background = '#dcfce7';
-            modalIconWrapper.innerHTML = `
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                    </svg>
-                `;
-            modalTitle.innerText = "Assessment Passed!";
-            modalTitle.style.color = '#15803d';
-            modalDesc.innerHTML = `Congratulations! You scored <strong>${score}/100</strong> and passed this week's assessment. The next module is now unlocked on your dashboard.`;
-            modalRetryBtn.style.display = 'none';
-            modalCancelBtn.innerText = "Dashboard";
-            modalCancelBtn.style.flex = "1";
+            resultBanner.style.background = '#dcfce7';
+            resultBanner.style.borderBottom = '1px solid #bbf7d0';
+            bannerIconContainer.style.background = '#86efac';
+            bannerIconWrapper.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            `;
+            bannerTitle.innerText = "Assessment Passed!";
+            bannerTitle.style.color = '#15803d';
+            bannerDesc.innerHTML = `Congratulations! You scored <strong>${score}/100</strong> and passed this week's assessment. The next module is now unlocked on your dashboard.`;
+            bannerRetryBtn.style.display = 'none';
         } else {
-            modalIconContainer.style.background = '#fee2e2';
-            modalIconWrapper.innerHTML = `
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#b91c1c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="15" y1="9" x2="9" y2="15"></line>
-                        <line x1="9" y1="9" x2="15" y2="15"></line>
-                    </svg>
-                `;
-            modalTitle.innerText = isTimeout ? "Interview Timed Out" : "Assessment Failed";
-            modalTitle.style.color = '#b91c1c';
+            resultBanner.style.background = '#fee2e2';
+            resultBanner.style.borderBottom = '1px solid #fecaca';
+            bannerIconContainer.style.background = '#fca5a5';
+            bannerIconWrapper.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#b91c1c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            `;
+            bannerTitle.innerText = isTimeout ? "Interview Timed Out" : "Assessment Failed";
+            bannerTitle.style.color = '#b91c1c';
             if (isTimeout) {
-                modalDesc.innerHTML = `You did not complete the interview within the 30-minute limit. This attempt has timed out and is counted as a failure (score: 0/100).`;
+                bannerDesc.innerHTML = `Time limit reached. Attempt failed (score: 0/100).`;
             } else {
-                modalDesc.innerHTML = `You scored <strong>${score}/100</strong>. You need &ge; 70 to unlock the next module. Would you like to try again?`;
+                bannerDesc.innerHTML = `You scored <strong>${score}/100</strong>. You need &ge; 70 to pass.`;
             }
-            modalRetryBtn.style.display = 'block';
-            modalCancelBtn.innerText = "Dashboard";
+            bannerRetryBtn.style.display = 'block';
         }
 
-        retryModal.style.display = 'flex';
+        resultBanner.style.display = 'flex';
     }
 
-    modalCancelBtn.onclick = () => {
-        window.location.href = "{% url 'curriculum_dashboard' %}";
-    };
-
-    modalRetryBtn.onclick = () => {
+    bannerRetryBtn.onclick = () => {
         window.location.reload();
     };
 
     {% if show_timeout_warning %}
-    showCompletionModal(0, true);
+    showCompletionBanner(0, true);
     {% endif %}
 </script>
 {% endif %}
