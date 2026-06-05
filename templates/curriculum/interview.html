@@ -4,236 +4,519 @@
 
 {% block content %}
 {% if is_blocked %}
-    <!-- Locked Screen -->
-    <div class="blocked-container" style="max-width: 600px; margin: 60px auto; padding: 40px; background: white; border-radius: 16px; border: 1px solid #e2e8f0; text-align: center; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);">
-        <div style="width: 80px; height: 80px; background: #fff1f2; color: #f43f5e; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px;">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-            </svg>
-        </div>
-        <h2 style="margin: 0 0 10px; color: #0f172a; font-size: 24px; font-weight: 700;">Assessment Temporarily Locked</h2>
-        <p style="margin: 0 0 24px; color: #64748b; font-size: 15px; line-height: 1.6;">
-            You have failed 2 consecutive interview attempts for this week. To ensure thorough learning, you can attempt this assessment again in:
-        </p>
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 16px; border-radius: 12px; font-size: 22px; font-weight: 700; color: #0f172a; margin-bottom: 30px; letter-spacing: 0.5px;">
-            {{ remaining_time_str }}
-        </div>
-        <a href="{% url 'curriculum_dashboard' %}" style="display: inline-block; background: #4f46e5; color: white; text-decoration: none; padding: 12px 30px; border-radius: 8px; font-weight: 600; font-size: 14.5px; transition: background 0.2s;" onmouseover="this.style.background='#3730a3'" onmouseout="this.style.background='#4f46e5'">
-            Back to Dashboard
-        </a>
+<!-- Locked Screen -->
+<div class="theme-card blocked-container"
+    style="max-width: 600px; margin: 60px auto; padding: 40px; text-align: center;">
+    <div
+        style="width: 80px; height: 80px; background: #fff1f2; color: #f43f5e; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px;">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
     </div>
+    <h2 class="theme-text-dark" style="margin: 0 0 10px; font-size: 24px; font-weight: 700;">Assessment Temporarily
+        Locked</h2>
+    <p class="theme-text-light" style="margin: 0 0 24px; font-size: 15px; line-height: 1.6;">
+        You have failed 2 consecutive interview attempts for this week. To ensure thorough learning, you can attempt
+        this assessment again in:
+    </p>
+    <div
+        style="background: var(--bg-main); border: 1px solid var(--border-color); padding: 16px; border-radius: 12px; font-size: 22px; font-weight: 700; color: var(--text-dark); margin-bottom: 30px; letter-spacing: 0.5px;">
+        {{ remaining_time_str }}
+    </div>
+    <a href="{% url 'curriculum_dashboard' %}"
+        style="display: inline-block; background: #2563eb; color: white; text-decoration: none; padding: 12px 30px; border-radius: 8px; font-weight: 600; font-size: 14.5px; transition: background 0.2s;"
+        onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'">
+        Back to Dashboard
+    </a>
+</div>
 {% else %}
-    <!-- Chat Window Container -->
-    <div class="interview-container" style="max-width: 900px; margin: 0 auto; height: calc(100vh - 150px); display: flex; flex-direction: column; position: relative;">
+<style>
+    .workspace-container {
+        display: flex;
+        gap: 20px;
+        height: calc(100vh - 120px);
+        width: 100%;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .chat-panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .editor-panel {
+        flex: 1.2;
+        display: flex;
+        flex-direction: column;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .panel-header {
+        background: var(--topbar-bg);
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .submit-code-btn {
+        background: #10b981;
+        color: white;
+        border: none;
+        padding: 8px 18px;
+        border-radius: 8px;
+        font-size: 13.5px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+    }
+
+    .submit-code-btn:hover {
+        background: #059669;
+        box-shadow: 0 6px 16px rgba(16, 185, 129, 0.25);
+    }
+
+    #monaco-editor-container {
+        flex-grow: 1;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    @media (max-width: 992px) {
+        .workspace-container {
+            flex-direction: column;
+            height: auto;
+            overflow-y: auto;
+            padding-bottom: 2rem;
+        }
+
+        .chat-panel {
+            height: 500px;
+            flex: none;
+        }
+
+        .editor-panel {
+            height: 450px;
+            flex: none;
+        }
+    }
+</style>
+
+<!-- Split-Screen Workspace Container -->
+<div class="workspace-container">
+
+    <!-- LEFT: Chat Column -->
+    <div class="chat-panel">
         <!-- Header -->
-        <div style="background: white; padding: 20px; border-radius: 12px 12px 0 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+        <div class="panel-header">
             <div>
-                <h2 style="margin: 0; color: #1e293b; font-size: 20px; font-weight: 700;">Week {{ week.week_number }}: {{ week.title }}</h2>
-                <p style="margin: 5px 0 0; color: #64748b; font-size: 13.5px; font-weight: 500;">AI-Powered Technical Interview</p>
+                <h2 class="theme-text-dark" style="margin: 0; font-size: 18px; font-weight: 700;">Week {{ week.week_number }}: {{ week.title }}</h2>
+                <p class="theme-text-light" style="margin: 3px 0 0; font-size: 13px; font-weight: 500;">AI Technical
+                    Interview</p>
             </div>
-            <div id="status-badge" style="background: #e0f2fe; color: #0369a1; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">
-                • Active Session
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <div id="timer-badge"
+                    style="background: #fef3c7; color: #d97706; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; font-family: monospace; display: flex; align-items: center; gap: 6px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    <span id="countdown-timer">30:00</span>
+                </div>
+                <div id="status-badge"
+                    style="background: #e0f2fe; color: #0369a1; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;">
+                    • Active
+                </div>
             </div>
         </div>
 
         <!-- Chat Window -->
-        <div id="chat-window" style="flex-grow: 1; background: #f8fafc; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth;">
+        <div id="chat-window"
+            style="flex-grow: 1; background: var(--bg-main); padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth;">
             {% if chat_history %}
-                {% for msg in chat_history %}
-                    {% if msg.role == 'user' %}
-                        <div class="message user-message" style="max-width: 80%; align-self: flex-end; background: #4f46e5; color: white; border-radius: 15px 15px 0 15px; padding: 12px 18px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                            <p style="margin: 0; line-height: 1.5;">{{ msg.content }}</p>
-                        </div>
-                    {% elif msg.role == 'assistant' %}
-                        <div class="message ai-message" style="max-width: 80%; align-self: flex-start; background: white; color: #334155; border-radius: 0 15px 15px 15px; border: 1px solid #e2e8f0; padding: 12px 18px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                            <p style="margin: 0; line-height: 1.5;">{{ msg.content }}</p>
-                        </div>
-                    {% endif %}
-                {% endfor %}
+            {% for msg in chat_history %}
+            {% if msg.role == 'user' %}
+            <div class="message user-message"
+                style="max-width: 80%; align-self: flex-end; background: #2563eb; color: white; border-radius: 15px 15px 0 15px; padding: 12px 18px; margin-bottom: 10px; box-shadow: var(--shadow-sm);">
+                <p style="margin: 0; line-height: 1.5; white-space: pre-wrap;">{{ msg.content }}</p>
+            </div>
+            {% elif msg.role == 'assistant' %}
+            <div class="message ai-message"
+                style="max-width: 80%; align-self: flex-start; background: var(--chat-bubble-ai); color: var(--chat-bubble-ai-text); border-radius: 0 15px 15px 15px; border: 1px solid var(--chat-bubble-ai-border); padding: 12px 18px; margin-bottom: 10px; box-shadow: var(--shadow-sm);">
+                <p style="margin: 0; line-height: 1.5; white-space: pre-wrap;">{{ msg.content }}</p>
+            </div>
+            {% endif %}
+            {% endfor %}
             {% else %}
-                <!-- AI Initial Greeting -->
-                <div class="message ai-message" style="max-width: 80%; align-self: flex-start; background: white; padding: 15px; border-radius: 0 15px 15px 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
-                    <p style="margin: 0; line-height: 1.5; color: #334155;">Hello! I am your AI Technical Interviewer. Are you ready to start your assessment for <strong>{{ week.title }}</strong>?</p>
-                </div>
+            <!-- AI Initial Greeting -->
+            <div class="message ai-message"
+                style="max-width: 80%; align-self: flex-start; background: var(--chat-bubble-ai); color: var(--chat-bubble-ai-text); padding: 15px; border-radius: 0 15px 15px 15px; box-shadow: var(--shadow-sm); border: 1px solid var(--chat-bubble-ai-border);">
+                <p style="margin: 0; line-height: 1.5;">Hello! I am your AI Technical Interviewer. Are you ready to
+                    start your assessment for <strong>{{ week.title }}</strong>?</p>
+            </div>
             {% endif %}
         </div>
 
         <!-- Input Area -->
-        <div style="background: white; padding: 20px; border-radius: 0 0 12px 12px; border-top: 1px solid #eee;">
+        <div style="background: var(--topbar-bg); padding: 20px; border-top: 1px solid var(--border-color);">
             <form id="chat-form" style="display: flex; gap: 10px;">
                 {% csrf_token %}
-                <input type="text" id="user-input" placeholder="Type your answer here..." required
-                       style="flex-grow: 1; padding: 12px 20px; border: 2px solid #e2e8f0; border-radius: 8px; outline: none; transition: border-color 0.3s;">
-                <button type="submit" id="send-btn" 
-                        style="background: #4f46e5; color: white; border: none; padding: 10px 25px; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                <input type="text" id="user-input" placeholder="Type your answer here..." required class="theme-input"
+                    style="flex-grow: 1; padding: 12px 20px; border: 2px solid var(--input-border); border-radius: 8px; outline: none; transition: border-color 0.3s;">
+                <button type="submit" id="send-btn"
+                    style="background: #2563eb; color: white; border: none; padding: 10px 25px; border-radius: 8px; cursor: pointer; font-weight: 600; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);">
                     Send
                 </button>
             </form>
         </div>
+    </div>
 
-        <!-- Try Again / Result Modal Overlay -->
-        <div id="retry-modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 50; align-items: center; justify-content: center;">
-            <div style="background: white; max-width: 480px; width: 90%; padding: 32px; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); text-align: center;">
-                <div id="modal-icon-container" style="width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
-                    <!-- SVG dynamically inserted -->
-                    <div id="modal-icon-wrapper"></div>
-                </div>
-                <h3 id="modal-title" style="margin: 0 0 10px; color: #0f172a; font-size: 20px; font-weight: 700;">Interview Status</h3>
-                <p id="modal-desc" style="margin: 0 0 24px; color: #64748b; font-size: 14.5px; line-height: 1.6;"></p>
-                <div style="display: flex; gap: 12px; justify-content: center;">
-                    <button id="modal-cancel-btn" style="flex: 1; padding: 12px; border: 1px solid #e2e8f0; background: white; color: #64748b; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; transition: background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
-                        Dashboard
-                    </button>
-                    <button id="modal-retry-btn" style="flex: 1; padding: 12px; border: none; background: #4f46e5; color: white; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; transition: background 0.2s;" onmouseover="this.style.background='#3730a3'" onmouseout="this.style.background='#4f46e5'">
-                        Try Again
-                    </button>
-                </div>
+    <!-- RIGHT: Code Editor Column -->
+    <div class="editor-panel">
+        <div class="panel-header">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span class="theme-text-dark" style="font-weight: 700; font-size: 15px;">Integrated IDE</span>
+                <select id="language-select" class="theme-input"
+                    style="padding: 4px 8px; border-radius: 6px; font-size: 12.5px; font-weight: 600; border: 1px solid var(--input-border); cursor: pointer; outline: none; transition: border-color 0.25s;">
+                    <option value="python">Python</option>
+                    <option value="javascript">JavaScript</option>
+                    <option value="go">Go</option>
+                    <option value="java">Java</option>
+                    <option value="c">C</option>
+                    <option value="cpp">C++</option>
+                    <option value="html">HTML</option>
+                    <option value="css">CSS</option>
+                </select>
+            </div>
+            <button id="submit-code-btn" class="submit-code-btn">Submit Code</button>
+        </div>
+
+        <!-- Monaco Container -->
+        <div id="monaco-editor-container"></div>
+    </div>
+
+    <!-- Try Again / Result Modal Overlay -->
+    <div id="retry-modal"
+        style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 50; align-items: center; justify-content: center;">
+        <div class="theme-card"
+            style="max-width: 480px; width: 90%; padding: 32px; border-radius: 16px; text-align: center; border: 1px solid var(--card-border);">
+            <div id="modal-icon-container"
+                style="width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                <div id="modal-icon-wrapper"></div>
+            </div>
+            <h3 id="modal-title" style="margin: 0 0 10px; font-size: 20px; font-weight: 700;">Interview Status</h3>
+            <p id="modal-desc" style="margin: 0 0 24px; font-size: 14.5px; line-height: 1.6;"></p>
+            <div style="display: flex; gap: 12px; justify-content: center;">
+                <button id="modal-cancel-btn"
+                    style="flex: 1; padding: 12px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-light); border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; transition: background 0.2s;"
+                    onmouseover="this.style.background='var(--border-color)'"
+                    onmouseout="this.style.background='var(--card-bg)'">
+                    Dashboard
+                </button>
+                <button id="modal-retry-btn"
+                    style="flex: 1; padding: 12px; border: none; background: #2563eb; color: white; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; transition: background 0.2s;"
+                    onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'">
+                    Try Again
+                </button>
             </div>
         </div>
     </div>
+</div>
 
-    <script>
-        const chatForm = document.getElementById('chat-form');
-        const chatWindow = document.getElementById('chat-window');
-        const userInput = document.getElementById('user-input');
-        const sendBtn = document.getElementById('send-btn');
-        
-        // Modal components
-        const retryModal = document.getElementById('retry-modal');
-        const modalIconWrapper = document.getElementById('modal-icon-wrapper');
-        const modalIconContainer = document.getElementById('modal-icon-container');
-        const modalTitle = document.getElementById('modal-title');
-        const modalDesc = document.getElementById('modal-desc');
-        const modalCancelBtn = document.getElementById('modal-cancel-btn');
-        const modalRetryBtn = document.getElementById('modal-retry-btn');
+<!-- Include Monaco Editor CDNs -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.39.0/min/vs/loader.min.js"></script>
+<script>
+    const chatForm = document.getElementById('chat-form');
+    const chatWindow = document.getElementById('chat-window');
+    const userInput = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
+    const submitCodeBtn = document.getElementById('submit-code-btn');
+    const languageSelect = document.getElementById('language-select');
 
-        // Auto-scroll to the bottom of the chat on page load
-        chatWindow.scrollTop = chatWindow.scrollHeight;
+    // Modal components
+    const retryModal = document.getElementById('retry-modal');
+    const modalIconWrapper = document.getElementById('modal-icon-wrapper');
+    const modalIconContainer = document.getElementById('modal-icon-container');
+    const modalTitle = document.getElementById('modal-title');
+    const modalDesc = document.getElementById('modal-desc');
+    const modalCancelBtn = document.getElementById('modal-cancel-btn');
+    const modalRetryBtn = document.getElementById('modal-retry-btn');
 
-        chatForm.onsubmit = async (e) => {
-            e.preventDefault();
-            const message = userInput.value.trim();
-            if (!message) return;
+    // Countdown Timer Config
+    let timerInterval = null;
+    let timeLeft = parseInt("{{ remaining_seconds }}");
+    const timerDisplay = document.getElementById('countdown-timer');
 
-            // 1. Display User Message
-            appendMessage(message, 'user');
-            userInput.value = '';
-            setLoading(true);
+    // Monaco Config
+    let editor = null;
 
-            // 2. Send to Django Proxy (which then talks to FastAPI)
-            try {
-                const formData = new FormData();
-                formData.append('message', message);
-                formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+    require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.39.0/min/vs' } });
+    require(['vs/editor/editor.main'], function () {
+        const currentTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'vs-dark' : 'vs';
 
-                const response = await fetch("{% url 'chat_api' week.id %}", {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const data = await response.json();
-                
-                if (data.reply) {
-                    appendMessage(data.reply, 'ai');
-                }
-                               if (data.finished) {
-                    userInput.disabled = true;
-                    sendBtn.disabled = true;
-                    appendMessage("Assessment Complete! Reviewing results...", 'system');
-                    
-                    const isTimeout = data.error === 'session_timeout';
-                    // Delay displaying the modal for 1.5 seconds to let the user read the last message
-                    setTimeout(() => {
-                        showCompletionModal(data.score, isTimeout);
-                    }, 1500);
-                }
-            } catch (error) {
-                console.error(error);
-                appendMessage("Error connecting to AI service. Please try again.", 'system');
-            } finally {
-                setLoading(false);
+        editor = monaco.editor.create(document.getElementById('monaco-editor-container'), {
+            value: "# Write your Python solution here\ndef solve():\n    pass",
+            language: 'python',
+            theme: currentTheme,
+            fontSize: 14,
+            fontFamily: 'Consolas, Courier New, monospace',
+            minimap: { enabled: false },
+            automaticLayout: true
+        });
+    });
+
+    // Language Selector Switcher
+    languageSelect.addEventListener('change', (e) => {
+        const lang = e.target.value;
+        if (editor) {
+            const model = editor.getModel();
+            
+            // Map 'cpp' option to Monaco's 'cpp' syntax mode
+            const monacoLang = lang === 'cpp' ? 'cpp' : lang;
+            monaco.editor.setModelLanguage(model, monacoLang);
+
+            // Initialize default templates based on language
+            if (lang === 'javascript') {
+                editor.setValue("// Write your JavaScript solution here\nfunction solve() {\n    // ...\n}");
+            } else if (lang === 'python') {
+                editor.setValue("# Write your Python solution here\ndef solve():\n    pass");
+            } else if (lang === 'go') {
+                editor.setValue("// Write your Go solution here\npackage main\n\nimport \"fmt\"\n\nfunc main() {\n    \n}");
+            } else if (lang === 'java') {
+                editor.setValue("// Write your Java solution here\npublic class Solution {\n    public static void main(String[] args) {\n        \n    }\n}");
+            } else if (lang === 'c') {
+                editor.setValue("// Write your C solution here\n#include <stdio.h>\n\nint main() {\n    return 0;\n}");
+            } else if (lang === 'cpp') {
+                editor.setValue("// Write your C++ solution here\n#include <iostream>\n\nint main() {\n    return 0;\n}");
+            } else if (lang === 'html') {
+                editor.setValue("<!-- Write your HTML here -->\n<div>\n    \n</div>");
+            } else if (lang === 'css') {
+                editor.setValue("/* Write your CSS here */\nbody {\n    \n}");
             }
-        };
-
-        function appendMessage(text, role) {
-            const div = document.createElement('div');
-            div.className = `message ${role}-message`;
-            
-            let styles = role === 'user' 
-                ? 'align-self: flex-end; background: #4f46e5; color: white; border-radius: 15px 15px 0 15px;'
-                : 'align-self: flex-start; background: white; color: #334155; border-radius: 0 15px 15px 15px; border: 1px solid #e2e8f0;';
-            
-            if(role === 'system') styles = 'align-self: center; background: #fef3c7; color: #92400e; font-size: 13px; border-radius: 6px; border: 1px dashed #f59e0b;';
-
-            div.style = `max-width: 80%; padding: 12px 18px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); ${styles}`;
-            div.innerHTML = `<p style="margin: 0; line-height: 1.5;">${text}</p>`;
-            
-            chatWindow.appendChild(div);
-            chatWindow.scrollTop = chatWindow.scrollHeight;
         }
+    });
 
-        function setLoading(isLoading) {
-            sendBtn.disabled = isLoading;
-            sendBtn.innerText = isLoading ? '...' : 'Send';
+    // Theme Switcher Sync for Monaco
+    const themeBtn = document.getElementById('theme-toggle');
+    if (themeBtn) {
+        themeBtn.addEventListener('click', () => {
+            setTimeout(() => {
+                if (editor) {
+                    const newTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'vs-dark' : 'vs';
+                    monaco.editor.setTheme(newTheme);
+                }
+            }, 150);
+        });
+    }
+
+    function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function updateTimerDisplay() {
+        timerDisplay.innerText = formatTime(timeLeft);
+        if (timeLeft <= 120) {
+            document.getElementById('timer-badge').style.background = '#fee2e2';
+            document.getElementById('timer-badge').style.color = '#ef4444';
         }
+    }
 
-        function showCompletionModal(score, isTimeout = false) {
-            const passed = score >= 70 && !isTimeout;
-            
-            if (passed) {
-                // Success configuration
-                modalIconContainer.style.background = '#dcfce7';
-                modalIconWrapper.innerHTML = `
+    function startTimer() {
+        if (timerInterval) return;
+        updateTimerDisplay();
+        timerInterval = setInterval(() => {
+            if (timeLeft > 0) {
+                timeLeft--;
+                updateTimerDisplay();
+            } else {
+                clearInterval(timerInterval);
+                timerInterval = null;
+                handleTimeout();
+            }
+        }, 1000);
+    }
+
+    function handleTimeout() {
+        userInput.disabled = true;
+        sendBtn.disabled = true;
+        submitCodeBtn.disabled = true;
+        appendMessage("Interview session time limit reached. Ending session...", 'system');
+        setTimeout(() => {
+            showCompletionModal(0, true);
+        }, 1500);
+    }
+
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+
+    const hasHistory = {% if chat_history %}true{% else %} false{% endif %};
+    if (hasHistory) {
+        startTimer();
+    } else {
+        updateTimerDisplay();
+    }
+
+    // Post Message to API Function
+    async function submitMessage(messageContent) {
+        setLoading(true);
+        try {
+            const formData = new FormData();
+            formData.append('message', messageContent);
+            formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+            const response = await fetch("{% url 'chat_api' week.id %}", {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.reply) {
+                appendMessage(data.reply, 'ai');
+            }
+            if (data.finished) {
+                userInput.disabled = true;
+                sendBtn.disabled = true;
+                submitCodeBtn.disabled = true;
+                appendMessage("Assessment Complete! Reviewing results...", 'system');
+
+                const isTimeout = data.error === 'session_timeout';
+                setTimeout(() => {
+                    showCompletionModal(data.score, isTimeout);
+                }, 1500);
+            }
+        } catch (error) {
+            console.error(error);
+            appendMessage("Error connecting to AI service. Please try again.", 'system');
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    chatForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const message = userInput.value.trim();
+        if (!message) return;
+
+        startTimer();
+        appendMessage(message, 'user');
+        userInput.value = '';
+
+        await submitMessage(message);
+    };
+
+    // Submit Code Handler
+    submitCodeBtn.onclick = async () => {
+        if (!editor) return;
+        const code = editor.getValue().trim();
+        if (!code) return;
+
+        startTimer();
+
+        const selectedLang = languageSelect.value;
+
+        // Format as markdown block
+        const formattedMessage = "My " + selectedLang + " code solution:\n```" + selectedLang + "\n" + code + "\n```";
+        appendMessage(formattedMessage, 'user');
+
+        await submitMessage(formattedMessage);
+    };
+
+    function appendMessage(text, role) {
+        const div = document.createElement('div');
+        div.className = `message ${role}-message`;
+
+        let styles = role === 'user'
+            ? 'align-self: flex-end; background: #2563eb; color: white; border-radius: 15px 15px 0 15px;'
+            : 'align-self: flex-start; background: var(--chat-bubble-ai); color: var(--chat-bubble-ai-text); border-radius: 0 15px 15px 15px; border: 1px solid var(--chat-bubble-ai-border);';
+
+        if (role === 'system') styles = 'align-self: center; background: #fef3c7; color: #92400e; font-size: 13px; border-radius: 6px; border: 1px dashed #f59e0b;';
+
+        div.style = `max-width: 80%; padding: 12px 18px; margin-bottom: 10px; box-shadow: var(--shadow-sm); ${styles}`;
+        div.innerHTML = `<p style="margin: 0; line-height: 1.5; white-space: pre-wrap;">${text}</p>`;
+
+        chatWindow.appendChild(div);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    function setLoading(isLoading) {
+        sendBtn.disabled = isLoading;
+        submitCodeBtn.disabled = isLoading;
+        sendBtn.innerText = isLoading ? '...' : 'Send';
+        submitCodeBtn.innerText = isLoading ? '...' : 'Submit Code';
+    }
+
+    function showCompletionModal(score, isTimeout = false) {
+        const passed = score >= 70 && !isTimeout;
+
+        if (passed) {
+            modalIconContainer.style.background = '#dcfce7';
+            modalIconWrapper.innerHTML = `
                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                         <polyline points="22 4 12 14.01 9 11.01"></polyline>
                     </svg>
                 `;
-                modalTitle.innerText = "Assessment Passed!";
-                modalTitle.style.color = '#15803d';
-                modalDesc.innerHTML = `Congratulations! You scored <strong>${score}/100</strong> and passed this week's assessment. The next module is now unlocked on your dashboard.`;
-                modalRetryBtn.style.display = 'none'; // No retry needed since they passed
-                modalCancelBtn.innerText = "Dashboard";
-                modalCancelBtn.style.flex = "1";
-            } else {
-                // Fail configuration
-                modalIconContainer.style.background = '#fee2e2';
-                modalIconWrapper.innerHTML = `
+            modalTitle.innerText = "Assessment Passed!";
+            modalTitle.style.color = '#15803d';
+            modalDesc.innerHTML = `Congratulations! You scored <strong>${score}/100</strong> and passed this week's assessment. The next module is now unlocked on your dashboard.`;
+            modalRetryBtn.style.display = 'none';
+            modalCancelBtn.innerText = "Dashboard";
+            modalCancelBtn.style.flex = "1";
+        } else {
+            modalIconContainer.style.background = '#fee2e2';
+            modalIconWrapper.innerHTML = `
                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#b91c1c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="10"></circle>
                         <line x1="15" y1="9" x2="9" y2="15"></line>
                         <line x1="9" y1="9" x2="15" y2="15"></line>
                     </svg>
                 `;
-                modalTitle.innerText = isTimeout ? "Interview Timed Out" : "Assessment Failed";
-                modalTitle.style.color = '#b91c1c';
-                if (isTimeout) {
-                    modalDesc.innerHTML = `You did not complete the interview within the 30-minute limit. This attempt has timed out and is counted as a failure (score: 0/100).`;
-                } else {
-                    modalDesc.innerHTML = `You scored <strong>${score}/100</strong>. You need &ge; 70 to unlock the next module. Would you like to try again?`;
-                }
-                modalRetryBtn.style.display = 'block';
-                modalCancelBtn.innerText = "Dashboard";
+            modalTitle.innerText = isTimeout ? "Interview Timed Out" : "Assessment Failed";
+            modalTitle.style.color = '#b91c1c';
+            if (isTimeout) {
+                modalDesc.innerHTML = `You did not complete the interview within the 30-minute limit. This attempt has timed out and is counted as a failure (score: 0/100).`;
+            } else {
+                modalDesc.innerHTML = `You scored <strong>${score}/100</strong>. You need &ge; 70 to unlock the next module. Would you like to try again?`;
             }
-            
-            retryModal.style.display = 'flex';
+            modalRetryBtn.style.display = 'block';
+            modalCancelBtn.innerText = "Dashboard";
         }
 
-        // Modal Action handlers
-        modalCancelBtn.onclick = () => {
-            window.location.href = "{% url 'curriculum_dashboard' %}";
-        };
+        retryModal.style.display = 'flex';
+    }
 
-        modalRetryBtn.onclick = () => {
-            // Reload the page to start a new attempt
-            window.location.reload();
-        };
+    modalCancelBtn.onclick = () => {
+        window.location.href = "{% url 'curriculum_dashboard' %}";
+    };
 
-        // Automatically trigger timeout modal if page loaded with a timeout warning
-        {% if show_timeout_warning %}
-            showCompletionModal(0, true);
-        {% endif %}
-    </script>
+    modalRetryBtn.onclick = () => {
+        window.location.reload();
+    };
+
+    {% if show_timeout_warning %}
+    showCompletionModal(0, true);
+    {% endif %}
+</script>
 {% endif %}
 {% endblock %}

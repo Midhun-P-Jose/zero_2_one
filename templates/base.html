@@ -291,6 +291,7 @@
         </svg>
     </div>
 
+    {% block body_content %}
     <div class="container">
         <div class="card-header-icon">
             <!-- Learning Representation: Graduation Cap / Mortarboard SVG -->
@@ -301,5 +302,6 @@
         </div>
         {% block content %}{% endblock %}
     </div>
+    {% endblock %}
 </body>
 </html>

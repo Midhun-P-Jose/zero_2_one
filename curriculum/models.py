@@ -35,6 +35,9 @@ class Interview_questions(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='interview_questions')
     week = models.ForeignKey(CourseWeek, on_delete=models.CASCADE)
     data = models.JSONField(default=list)
+    is_finished = models.BooleanField(default=False)
+    score = models.IntegerField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

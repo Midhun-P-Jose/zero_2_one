@@ -1,33 +1,231 @@
 {% extends 'base.html' %}
 
-{% block title %}Select a Course{% endblock %}
+{% block title %}Select a Course - IT PATHWAY{% endblock %}
 
-{% block content %}
-<div style="max-width: 800px; margin: 0 auto; padding: 20px;">
-    <h2>Welcome, {{ user }}!</h2>
-    <p>Please select a course to begin your learning journey. Note: You can only select one course.</p>
-    
-    <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 20px;">
+{% block body_content %}
+<style>
+    .selection-wrapper {
+        width: 100%;
+        max-width: 1000px;
+        margin: 2rem auto;
+        padding: 0 1.5rem;
+        z-index: 10;
+        animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .selection-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .selection-header h1 {
+        font-size: 2.25rem;
+        font-weight: 800;
+        color: #0f172a;
+        letter-spacing: -0.03em;
+        margin-bottom: 0.75rem;
+    }
+
+    .selection-header p {
+        font-size: 1.05rem;
+        color: #64748b;
+        max-width: 600px;
+        margin: 0 auto;
+        line-height: 1.6;
+    }
+
+    .course-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3.5rem;
+    }
+
+    .course-card {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        border-radius: 24px;
+        padding: 2.25rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-shadow: 
+            0 4px 6px -1px rgba(0, 0, 0, 0.02),
+            0 20px 25px -5px rgba(15, 23, 42, 0.03);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .course-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 
+            0 10px 15px -3px rgba(37, 99, 235, 0.05),
+            0 25px 50px -12px rgba(15, 23, 42, 0.08);
+        border-color: rgba(37, 99, 235, 0.3);
+    }
+
+    .course-icon-badge {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        color: #2563eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.05);
+    }
+
+    .course-card h3 {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 0.75rem;
+        letter-spacing: -0.02em;
+    }
+
+    .course-card p {
+        font-size: 0.95rem;
+        color: #64748b;
+        line-height: 1.6;
+        margin-bottom: 2rem;
+        flex-grow: 1;
+    }
+
+    .enroll-btn {
+        width: 100%;
+        padding: 0.875rem;
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        color: white;
+        border: none;
+        border-radius: 14px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .enroll-btn:hover {
+        background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+        box-shadow: 0 6px 18px rgba(37, 99, 235, 0.25);
+    }
+
+    .logout-container {
+        text-align: center;
+        margin-top: 2rem;
+    }
+
+    .logout-link-btn {
+        background: transparent;
+        border: none;
+        color: #64748b;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        font-family: inherit;
+        transition: color 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .logout-link-btn:hover {
+        color: #ef4444;
+    }
+
+    @keyframes fadeUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @media (max-width: 640px) {
+        .selection-header h1 {
+            font-size: 1.75rem;
+        }
+        .course-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="selection-wrapper">
+    {% if messages %}
+        <div style="margin-bottom: 2rem; display: flex; flex-direction: column; gap: 10px; width: 100%;">
+            {% for message in messages %}
+                <div style="padding: 14px 20px; border-radius: 14px; font-size: 0.925rem; background: rgba(37, 99, 235, 0.08); color: #2563eb; border: 1px solid rgba(37, 99, 235, 0.15); display: flex; align-items: center; gap: 10px; font-weight: 500; animation: fadeUp 0.4s ease;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    <span>{{ message }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="selection-header">
+        <h1>Welcome, {{ user.first_name|default:user.username }}!</h1>
+        <p>Select a specialized path to launch your learning journey. You can focus on one course at a time to complete your weekly challenges.</p>
+    </div>
+
+    <div class="course-grid">
         {% for course in courses %}
-        <div style="border: 1px solid #ddd; border-radius: 8px; padding: 20px; width: 300px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <h3>{{ course.name }}</h3>
-            <p>{{ course.description|linebreaksbr }}</p>
+        <div class="course-card">
+            <div>
+                <div class="course-icon-badge">
+                    <!-- Dynamic/Decorative graduation/learning icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                    </svg>
+                </div>
+                <h3>{{ course.name }}</h3>
+                <p>{{ course.description|linebreaksbr }}</p>
+            </div>
+            
             <form action="{% url 'enroll' course.id %}" method="post">
                 {% csrf_token %}
-                <button type="submit" style="background-color: #28a745; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer;">
-                    Enroll in {{ course.name }}
+                <button type="submit" class="enroll-btn">
+                    Enroll & Start Learning
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
                 </button>
             </form>
         </div>
         {% empty %}
-        <p>No courses are currently available. Please check back later.</p>
+        <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: #64748b;">
+            <p>No courses are currently available. Please check back later.</p>
+        </div>
         {% endfor %}
     </div>
 
-    <div style="margin-top: 30px;">
-        <form action="{% url 'logout' %}" method="post">
+    <div class="logout-container">
+        <form action="{% url 'logout' %}" method="post" style="display: inline-block;">
             {% csrf_token %}
-            <button type="submit" style="background-color: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">Logout</button>
+            <button type="submit" class="logout-link-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+                Log out from system
+            </button>
         </form>
     </div>
 </div>

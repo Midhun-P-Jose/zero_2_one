@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
 from django.http import JsonResponse
+from django.contrib import messages
 from .models import Course, Enrollment, Interview_questions, CourseWeek
 import requests
 import json
@@ -34,7 +35,9 @@ def enroll(request, course_id):
 @login_required
 @never_cache
 def dashboard(request):
+
     if not hasattr(request.user, 'enrollment'):
+        messages.info(request, "Your previous enrollment was removed. Please select a course to continue.")
         return redirect('course_selection')
         
     enrollment = request.user.enrollment
@@ -45,30 +48,7 @@ def dashboard(request):
     sessions = Interview_questions.objects.filter(user=request.user)
     exams_attempted = sessions.count()
     
-    failed_count = 0
-    for session in sessions:
-        is_finished = False
-        score = 0
-        
-        # 1. Check for system_metadata block in chat data
-        metadata = next((msg for msg in session.data if isinstance(msg, dict) and msg.get('role') == 'system_metadata'), None)
-        if metadata:
-            is_finished = metadata.get('finished', False)
-            score = metadata.get('score', 0)
-        else:
-            # 2. Fallback: check if the session is finished via assistant content keyword
-            is_finished = any(
-                isinstance(msg, dict) and msg.get('role') == 'assistant' and 
-                any(keyword in (msg.get('content') or '').lower() for keyword in ["assessment complete", "interview is complete", "score:"])
-                for msg in session.data
-            )
-            # If it's finished but their unlocked week hasn't progressed past this week, they must have failed
-            if is_finished and session.week.week_number == enrollment.current_week_unlocked:
-                score = 0  # Failed
-
-        if is_finished and score < 70:
-            failed_count += 1
-            
+    failed_count = sessions.filter(is_finished=True, score__lt=70).count()
     fail_rate = int((failed_count / exams_attempted) * 100) if exams_attempted > 0 else 0
     
     active_week = weeks.filter(week_number=enrollment.current_week_unlocked).first()
@@ -87,6 +67,7 @@ def dashboard(request):
 @never_cache
 def weekly_tasks(request):
     if not hasattr(request.user, 'enrollment'):
+        messages.info(request, "Your previous enrollment was removed. Please select a course to continue.")
         return redirect('course_selection')
         
     enrollment = request.user.enrollment
@@ -119,24 +100,8 @@ def interview(request, week_id):
     completed_sessions = []
     
     for session in all_sessions:
-        is_finished = False
-        score = 0
-        metadata = next((msg for msg in session.data if isinstance(msg, dict) and msg.get('role') == 'system_metadata'), None)
-        if metadata:
-            is_finished = metadata.get('finished', False)
-            score = metadata.get('score', 0)
-        else:
-            is_finished = any(
-                isinstance(msg, dict) and msg.get('role') == 'assistant' and 
-                any(keyword in (msg.get('content') or '').lower() for keyword in ["assessment complete", "interview is complete", "score:"])
-                for msg in session.data
-            )
-            # If finished but not unlocked next week, they failed
-            if is_finished:
-                score = 100 if week.week_number < enrollment.current_week_unlocked else 0
-                
-        if is_finished:
-            completed_sessions.append((session, score))
+        if session.is_finished:
+            completed_sessions.append((session, session.score or 0))
             
     if len(completed_sessions) >= 2:
         last_two = completed_sessions[-2:]
@@ -161,23 +126,18 @@ def interview(request, week_id):
     interview_session = all_sessions.last()
     chat_history = []
     show_timeout_warning = False
+    remaining_seconds = 1800
     if interview_session:
         # Check if the latest session is finished
-        is_latest_finished = False
-        metadata = next((msg for msg in interview_session.data if isinstance(msg, dict) and msg.get('role') == 'system_metadata'), None)
-        if metadata:
-            is_latest_finished = metadata.get('finished', False)
-        else:
-            is_latest_finished = any(
-                isinstance(msg, dict) and msg.get('role') == 'assistant' and 
-                any(keyword in (msg.get('content') or '').lower() for keyword in ["assessment complete", "interview is complete", "score:"])
-                for msg in interview_session.data
-            )
+        is_latest_finished = interview_session.is_finished
             
         # Check if the session has timed out (older than 30 minutes)
         if not is_latest_finished and interview_session.created_at:
             if timezone.now() > interview_session.created_at + timedelta(minutes=30):
                 # Mark as finished/timeout with score 0
+                interview_session.is_finished = True
+                interview_session.score = 0
+                interview_session.completed_at = timezone.now()
                 interview_session.data.append({
                     "role": "system_metadata",
                     "finished": True,
@@ -191,13 +151,18 @@ def interview(request, week_id):
         if not is_latest_finished:
             # Still active, load chat history
             chat_history = interview_session.data
+            elapsed = (timezone.now() - interview_session.created_at).total_seconds()
+            remaining_seconds = max(0, 1800 - int(elapsed))
         else:
             # If passed, we allow reviewing the session.
             if week.week_number < enrollment.current_week_unlocked:
                 chat_history = interview_session.data
+                elapsed = (timezone.now() - interview_session.created_at).total_seconds()
+                remaining_seconds = max(0, 1800 - int(elapsed))
             else:
                 # If they failed, show a fresh screen (chat_history = []) to start new attempt
                 chat_history = []
+                remaining_seconds = 1800
                 
     return render(request, 'curriculum/interview.html', {
         'week': week,
@@ -205,7 +170,8 @@ def interview(request, week_id):
         'is_blocked': is_blocked,
         'blocked_until': blocked_until,
         'remaining_time_str': remaining_time_str,
-        'show_timeout_warning': show_timeout_warning
+        'show_timeout_warning': show_timeout_warning,
+        'remaining_seconds': remaining_seconds
     })
 
 @login_required
@@ -220,23 +186,8 @@ def chat_api(request, week_id):
         completed_sessions = []
         
         for session in all_sessions:
-            is_finished = False
-            score = 0
-            metadata = next((msg for msg in session.data if isinstance(msg, dict) and msg.get('role') == 'system_metadata'), None)
-            if metadata:
-                is_finished = metadata.get('finished', False)
-                score = metadata.get('score', 0)
-            else:
-                is_finished = any(
-                    isinstance(msg, dict) and msg.get('role') == 'assistant' and 
-                    any(keyword in (msg.get('content') or '').lower() for keyword in ["assessment complete", "interview is complete", "score:"])
-                    for msg in session.data
-                )
-                if is_finished:
-                    score = 100 if week.week_number < enrollment.current_week_unlocked else 0
-                    
-            if is_finished:
-                completed_sessions.append((session, score))
+            if session.is_finished:
+                completed_sessions.append((session, session.score or 0))
                 
         if len(completed_sessions) >= 2:
             last_two = completed_sessions[-2:]
@@ -250,20 +201,15 @@ def chat_api(request, week_id):
         interview_session = all_sessions.last()
         is_latest_finished = False
         if interview_session:
-            metadata = next((msg for msg in interview_session.data if isinstance(msg, dict) and msg.get('role') == 'system_metadata'), None)
-            if metadata:
-                is_latest_finished = metadata.get('finished', False)
-            else:
-                is_latest_finished = any(
-                    isinstance(msg, dict) and msg.get('role') == 'assistant' and 
-                    any(keyword in (msg.get('content') or '').lower() for keyword in ["assessment complete", "interview is complete", "score:"])
-                    for msg in interview_session.data
-                )
+            is_latest_finished = interview_session.is_finished
                 
             # Check if the session has timed out (older than 30 minutes)
             if not is_latest_finished and interview_session.created_at:
                 if timezone.now() > interview_session.created_at + timedelta(minutes=30):
                     # Mark as finished/timeout with score 0
+                    interview_session.is_finished = True
+                    interview_session.score = 0
+                    interview_session.completed_at = timezone.now()
                     interview_session.data.append({
                         "role": "system_metadata",
                         "finished": True,
@@ -359,6 +305,9 @@ def chat_api(request, week_id):
             # 4. Handle Week Unlocking if the interview is finished
             if response_data.get('finished'):
                 score = response_data.get('score', 0)
+                interview_session.is_finished = True
+                interview_session.score = score
+                interview_session.completed_at = timezone.now()
                 # Save metadata into the JSON history for stats calculation
                 interview_session.data.append({
                     "role": "system_metadata",
@@ -379,4 +328,3 @@ def chat_api(request, week_id):
             return JsonResponse({"error": str(e)}, status=500)
             
     return JsonResponse({"error": "Invalid request"}, status=400)
-

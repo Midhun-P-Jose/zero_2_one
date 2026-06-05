@@ -3,43 +3,153 @@
 {% block title %}Weekly Tasks - {{ course.name }}{% endblock %}
 
 {% block content %}
-<div class="weekly-tasks-container" style="max-width: 1200px; margin: 0 auto; padding: 10px;">
+<style>
+    .weekly-tasks-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 10px;
+    }
+    
+    .page-header {
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 15px;
+        margin-bottom: 25px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .current-week-indicator {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 13.5px;
+        color: var(--text-dark);
+        font-weight: 600;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .weeks-track {
+        display: flex;
+        gap: 20px;
+        overflow-x: auto;
+        padding: 10px 0 20px;
+        scrollbar-width: thin;
+        -webkit-overflow-scrolling: touch;
+        margin-bottom: 30px;
+    }
+
+    .week-selector-card {
+        min-width: 250px;
+        max-width: 250px;
+        background: var(--card-bg);
+        border-radius: 12px;
+        border: 2px solid var(--border-color);
+        padding: 20px;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .week-selector-card.active-week {
+        border-color: #2563eb !important;
+    }
+
+    .week-selector-card.locked {
+        background: var(--bg-main);
+        border: 2px dashed var(--border-color);
+        opacity: 0.65;
+    }
+
+    .details-panel {
+        background: var(--card-bg);
+        border-radius: 16px;
+        border: 1px solid var(--card-border);
+        padding: 35px;
+        box-shadow: var(--shadow-md);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 250px;
+        transition: all 0.25s ease;
+    }
+
+    .action-btn {
+        display: inline-block;
+        text-align: center;
+        text-decoration: none;
+        padding: 14px 35px;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 14.5px;
+        transition: all 0.2s;
+    }
+
+    .btn-blue {
+        background: #2563eb;
+        color: white;
+        border: 1px solid transparent;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+    }
+
+    .btn-blue:hover {
+        background: #1d4ed8;
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);
+    }
+
+    .btn-light {
+        background: var(--bg-main);
+        color: #2563eb;
+        border: 1px solid var(--border-color);
+    }
+
+    .btn-light:hover {
+        background: var(--border-color);
+    }
+</style>
+
+<div class="weekly-tasks-container">
     <!-- Page Header -->
-    <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 15px;">
+    <div class="page-header">
         <div>
-            <h2 style="margin: 0; color: #0f172a; font-size: 24px; font-weight: 700;">Weekly Learning Plan</h2>
-            <p style="margin: 5px 0 0; color: #64748b; font-size: 14.5px;">Click any week below to view its full details and start the assessment.</p>
+            <h2 class="theme-text-dark" style="margin: 0; font-size: 24px; font-weight: 700;">Weekly Learning Plan</h2>
+            <p class="theme-text-light" style="margin: 5px 0 0; font-size: 14.5px;">Click any week below to view its full details and start the assessment.</p>
         </div>
-        <div style="background: white; border: 1px solid #e2e8f0; padding: 8px 16px; border-radius: 8px; font-size: 13.5px; color: #334155; font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
-            Current Week: <span style="color: #4f46e5; font-weight: 700;">Week {{ enrollment.current_week_unlocked }}</span>
+        <div class="current-week-indicator">
+            Current Week: <span style="color: #2563eb; font-weight: 700;">Week {{ enrollment.current_week_unlocked }}</span>
         </div>
     </div>
 
     <!-- Horizontal Weeks Selector Track -->
     {% if weeks %}
-        <div style="display: flex; gap: 20px; overflow-x: auto; padding: 10px 0 20px; scrollbar-width: thin; -webkit-overflow-scrolling: touch; margin-bottom: 30px;">
+        <div class="weeks-track">
             {% for week in weeks %}
                 {% if week.week_number <= enrollment.current_week_unlocked %}
                     <!-- Unlocked Card (Clickable Selector) -->
-                    <div class="week-selector-card" id="selector-week-{{ week.id }}"
+                    <div class="week-selector-card {% if week.week_number == enrollment.current_week_unlocked %}active-week{% endif %}" id="selector-week-{{ week.id }}"
                          data-id="{{ week.id }}"
                          data-number="{{ week.week_number }}"
                          data-title="{{ week.title }}"
                          data-desc="{% if week.description %}{{ week.description }}{% else %}No description provided.{% endif %}"
                          data-status="{% if week.week_number < enrollment.current_week_unlocked %}passed{% else %}active{% endif %}"
                          data-url="{% url 'interview' week.id %}"
-                         style="min-width: 250px; max-width: 250px; background: white; border-radius: 12px; border: 2px solid {% if week.week_number == enrollment.current_week_unlocked %}#4f46e5{% else %}#e2e8f0{% endif %}; padding: 20px; cursor: pointer; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: all 0.2s;"
                          onclick="selectWeek(this)">
                         
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span style="font-size: 11px; font-weight: 700; color: #4f46e5; text-transform: uppercase; letter-spacing: 0.5px;">Week {{ week.week_number }}</span>
+                            <span style="font-size: 11px; font-weight: 700; color: #2563eb; text-transform: uppercase; letter-spacing: 0.5px;">Week {{ week.week_number }}</span>
                             {% if week.week_number < enrollment.current_week_unlocked %}
-                                <span style="background: #dcfce7; color: #15803d; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 20px;">✓ Passed</span>
+                                <span style="background: rgba(16, 185, 129, 0.1); color: #10b981; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 20px;">✓ Passed</span>
                             {% else %}
-                                <span style="background: #e0f2fe; color: #0369a1; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 20px;">⚡ Active</span>
+                                <span style="background: rgba(37, 99, 235, 0.1); color: #2563eb; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 20px;">⚡ Active</span>
                             {% endif %}
                         </div>
-                        <h4 style="margin: 0; color: #1e293b; font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ week.title }}</h4>
+                        <h4 class="theme-text-dark" style="margin: 0; font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ week.title }}</h4>
                     </div>
                 {% else %}
                     <!-- Locked Card (Disabled) -->
@@ -50,48 +160,46 @@
                          data-desc="Complete current week objectives to unlock this technical module."
                          data-status="locked"
                          data-url="#"
-                         style="min-width: 250px; max-width: 250px; background: #f8fafc; border-radius: 12px; border: 2px dashed #cbd5e1; padding: 20px; cursor: pointer; display: flex; flex-direction: column; gap: 10px; opacity: 0.65; transition: all 0.2s;"
                          onclick="selectWeek(this)">
                         
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Week {{ week.week_number }}</span>
-                            <span style="background: #e2e8f0; color: #64748b; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 20px;">🔒 Locked</span>
+                            <span style="font-size: 11px; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px;">Week {{ week.week_number }}</span>
+                            <span style="background: var(--border-color); color: var(--text-light); font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 20px;">🔒 Locked</span>
                         </div>
-                        <h4 style="margin: 0; color: #94a3b8; font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Locked Module</h4>
+                        <h4 class="theme-text-light" style="margin: 0; font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Locked Module</h4>
                     </div>
                 {% endif %}
             {% endfor %}
         </div>
 
         <!-- Detailed Week Task Panel -->
-        <div id="details-panel" style="background: white; border-radius: 16px; border: 1px solid #e2e8f0; padding: 35px; box-shadow: 0 10px 20px -5px rgba(0,0,0,0.04); display: flex; flex-direction: column; justify-content: space-between; min-height: 250px;">
+        <div id="details-panel" class="details-panel">
             <div>
                 <!-- Badge row -->
-                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
-                    <span id="detail-badge-number" style="background: #4f46e5; color: white; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px;">Week 1</span>
-                    <span id="detail-badge-status" style="background: #e0f2fe; color: #0369a1; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 20px;">⚡ Active assessment</span>
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <span id="detail-badge-number" style="background: #2563eb; color: white; font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px;">Week 1</span>
+                    <span id="detail-badge-status" style="font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px;">⚡ Active assessment</span>
                 </div>
                 
-                <h3 id="detail-title" style="margin: 0 0 20px; color: #0f172a; font-size: 22px; font-weight: 700;">Loading...</h3>
+                <h3 id="detail-title" class="theme-text-dark" style="margin: 0 0 20px; font-size: 22px; font-weight: 700;">Loading...</h3>
                 
                 <!-- Separator line -->
-                <div style="height: 1px; background: #e2e8f0; margin-bottom: 20px;"></div>
+                <div style="height: 1px; background: var(--border-color); margin-bottom: 20px;"></div>
                 
-                <h4 style="margin: 0 0 10px; color: #475569; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Module Objectives & Tasks:</h4>
-                <p id="detail-desc" style="margin: 0 0 35px; color: #334155; font-size: 15px; line-height: 1.7; white-space: pre-line; max-width: 900px;"></p>
+                <h4 class="theme-text-light" style="margin: 0 0 10px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Module Objectives & Tasks:</h4>
+                <p id="detail-desc" class="theme-text-dark" style="margin: 0 0 35px; font-size: 15px; line-height: 1.7; white-space: pre-line; max-width: 900px;"></p>
             </div>
 
             <!-- Start Interview / Action Button at the end -->
-            <div style="border-top: 1px solid #e2e8f0; padding-top: 25px; display: flex; justify-content: flex-end;">
-                <a id="detail-action-btn" href="#" 
-                   style="display: inline-block; text-align: center; text-decoration: none; padding: 14px 35px; border-radius: 8px; font-weight: 700; font-size: 15px; transition: all 0.2s;">
+            <div style="border-top: 1px solid var(--border-color); padding-top: 25px; display: flex; justify-content: flex-end;">
+                <a id="detail-action-btn" href="#" class="action-btn">
                    Start Interview
                 </a>
             </div>
         </div>
     {% else %}
-        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 14px; padding: 40px; text-align: center; color: #64748b;">
-            <p style="margin: 0; font-size: 15px;">No study plan has been added for this course yet.</p>
+        <div class="theme-card" style="padding: 40px; text-align: center;">
+            <p class="theme-text-light" style="margin: 0; font-size: 15px;">No study plan has been added for this course yet.</p>
         </div>
     {% endif %}
 </div>
@@ -101,17 +209,17 @@
         // 1. Remove active styles from all cards
         document.querySelectorAll('.week-selector-card').forEach(c => {
             c.style.transform = 'translateY(0)';
-            c.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.05)';
+            c.style.boxShadow = 'var(--shadow-sm)';
             if (!c.classList.contains('locked')) {
-                c.style.borderColor = '#e2e8f0';
+                c.style.borderColor = 'var(--border-color)';
             }
         });
 
         // 2. Add active styling to selected card
         card.style.transform = 'translateY(-4px)';
-        card.style.boxShadow = '0 8px 15px -3px rgba(79, 70, 229, 0.15)';
+        card.style.boxShadow = 'var(--shadow-md)';
         if (!card.classList.contains('locked')) {
-            card.style.borderColor = '#4f46e5';
+            card.style.borderColor = '#2563eb';
         }
 
         // 3. Extract data attributes
@@ -136,32 +244,28 @@
 
         if (status === 'passed') {
             statusBadge.innerText = '✓ Passed Module';
-            statusBadge.style.background = '#dcfce7';
-            statusBadge.style.color = '#15803d';
+            statusBadge.style.background = 'rgba(16, 185, 129, 0.1)';
+            statusBadge.style.color = '#10b981';
             
             actionBtn.style.display = 'inline-block';
             actionBtn.href = url;
             actionBtn.innerText = 'Review Assessment';
-            actionBtn.style.background = '#f1f5f9';
-            actionBtn.style.color = '#4f46e5';
-            actionBtn.style.border = '1px solid #e2e8f0';
+            actionBtn.className = 'action-btn btn-light';
             actionBtn.style.cursor = 'pointer';
         } else if (status === 'active') {
             statusBadge.innerText = '⚡ Active Assessment';
-            statusBadge.style.background = '#e0f2fe';
-            statusBadge.style.color = '#0369a1';
+            statusBadge.style.background = 'rgba(37, 99, 235, 0.1)';
+            statusBadge.style.color = '#2563eb';
             
             actionBtn.style.display = 'inline-block';
             actionBtn.href = url;
             actionBtn.innerText = 'Start Interview';
-            actionBtn.style.background = '#4f46e5';
-            actionBtn.style.color = 'white';
-            actionBtn.style.border = '1px solid transparent';
+            actionBtn.className = 'action-btn btn-blue';
             actionBtn.style.cursor = 'pointer';
         } else {
             statusBadge.innerText = '🔒 Locked Module';
-            statusBadge.style.background = '#f1f5f9';
-            statusBadge.style.color = '#64748b';
+            statusBadge.style.background = 'var(--border-color)';
+            statusBadge.style.color = 'var(--text-light)';
             
             actionBtn.style.display = 'none'; // Hide button for locked modules
         }
@@ -186,7 +290,7 @@
 <style>
     .week-selector-card:hover {
         transform: translateY(-2px) !important;
-        box-shadow: 0 6px 12px -2px rgba(0,0,0,0.08) !important;
+        box-shadow: var(--shadow-md) !important;
     }
     @keyframes pulse {
         0%, 100% { opacity: 1; }
